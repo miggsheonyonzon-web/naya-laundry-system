@@ -50,7 +50,8 @@
                             <form method="POST"
                                   action="{{ url_for('customer.delete', customer_id=c.id) }}"
                                   class="d-inline"
-                                  data-confirm="Delete {{ c.full_name }}? This cannot be undone.">
+                                  data-confirm="Delete {{ c.full_name }} and all of their orders? This cannot be undone.">
+                                  
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>

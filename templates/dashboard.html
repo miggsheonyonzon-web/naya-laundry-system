@@ -8,8 +8,23 @@
     <p class="text-muted">Here is an overview of your laundry shop.</p>
 
     <div class="row g-3 mb-4">
+        {% for status, total in order_counts.items() %}
+        <div class="col-6 col-md-3">
+            <a href="{{ url_for('order.index', status=status) }}" class="text-decoration-none">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h6 text-muted">{{ status }}</h2>
+                        <p class="display-6 mb-0">{{ total }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Total customers</h2>
                     <p class="display-6 mb-2">{{ total_customers }}</p>
@@ -19,9 +34,10 @@
         </div>
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <h2 class="h6 text-muted">Quick action</h2>
-                    <a href="{{ url_for('customer.add') }}" class="btn btn-primary">+ Add customer</a>
+                <div class="card-body d-flex flex-column justify-content-center gap-2">
+                    <h2 class="h6 text-muted">Quick actions</h2>
+                    <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
+                    <a href="{{ url_for('customer.add') }}" class="btn btn-outline-primary">+ Add customer</a>
                 </div>
             </div>
         </div>

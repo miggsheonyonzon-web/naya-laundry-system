@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - NAYA{% endblock %}
+
+{% block content %}
+{% set colors = {'Received': 'secondary', 'Washing': 'warning',
+                 'Ready': 'info', 'Picked up': 'success'} %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 fw-bold mb-0">Orders</h1>
+        <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
+    </div>
+
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link {% if not status %}active{% endif %}"
+               href="{{ url_for('order.index') }}">All</a>
+        </li>
+        {% for s in statuses %}
+        <li class="nav-item">
+            <a class="nav-link {% if status == s %}active{% endif %}"
+               href="{{ url_for('order.index', status=s) }}">{{ s }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% if orders %}
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Weight</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td>{{ o.id }}</td>
+                        <td class="fw-semibold">{{ o.customer_name }}</td>
+                        <td>{{ o.service_type }}</td>
+                        <td>{{ o.weight_kg }} kg</td>
+                        <td>₱{{ o.price }}</td>
+                        <td>
+                            <span class="badge text-bg-{{ colors[o.status] }}">{{ o.status }}</span>
+                        </td>
+                        <td>{{ o.created_at.strftime("%b %d, %Y") }}</td>
+                        <td class="text-end text-nowrap">
+                            <form method="POST"
+                                  action="{{ url_for('order.update_status', order_id=o.id) }}"
+                                  class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <select name="status" class="form-select form-select-sm d-inline w-auto"
+                                        onchange="this.form.submit()">
+                                    {% for s in statuses %}
+                                    <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                            <form method="POST"
+                                  action="{{ url_for('order.delete', order_id=o.id) }}"
+                                  class="d-inline"
+                                  data-confirm="Delete order #{{ o.id }}? This cannot be undone.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted small mt-2">{{ orders|length }} order(s)</p>
+    {% else %}
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            {% if status %}
+            <p class="mb-0">No orders with status "{{ status }}".</p>
+            {% else %}
+            <p class="mb-3">You have no orders yet.</p>
+            <a href="{{ url_for('order.add') }}" class="btn btn-primary">Create your first order</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
