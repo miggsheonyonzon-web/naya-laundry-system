@@ -1,0 +1,19 @@
+:root {
+    --naya-primary: #0d6efd;
+    --naya-dark: #0a3d91;
+    --naya-light: #eaf3ff;
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--naya-light);
+}
+
+.navbar-naya {
+    background-color: var(--naya-dark);
+}
+
+.hero {
+    padding: 5rem 0;
+    text-align: center;
+}
