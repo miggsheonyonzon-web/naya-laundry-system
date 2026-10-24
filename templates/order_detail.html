@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.id }} - NAYA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/logo.svg') }}"
+                             alt="NAYA Logo" height="48">
+                        <h1 class="h4 fw-bold mt-2 mb-0">NAYA Bubble Laundry</h1>
+                        <p class="text-muted mb-0">Receipt</p>
+                    </div>
+
+                    <table class="table table-borderless mb-3">
+                        <tr>
+                            <th class="w-50">Order no.</th>
+                            <td>#{{ order.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date</th>
+                            <td>{{ order.created_at.strftime("%b %d, %Y %I:%M %p") }}</td>
+                        </tr>
+                        <tr>
+                            <th>Customer</th>
+                            <td>{{ order.customer_name }}</td>
+                        </tr>
+                        {% if customer %}
+                        <tr>
+                            <th>Phone</th>
+                            <td>{{ customer.phone }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Service</th>
+                            <td>{{ order.service_type }}</td>
+                        </tr>
+                        <tr>
+                            <th>Weight</th>
+                            <td>{{ order.weight_kg }} kg</td>
+                        </tr>
+                        <tr>
+                            <th>Rate</th>
+                            <td>₱{{ "%.2f"|format(order.price / order.weight_kg) }} / kg</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>{{ order.status }}</td>
+                        </tr>
+                        {% if order.notes %}
+                        <tr>
+                            <th>Notes</th>
+                            <td>{{ order.notes }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <div class="border-top pt-3 d-flex justify-content-between fs-4 fw-bold">
+                        <span>Total</span>
+                        <span>₱{{ order.price }}</span>
+                    </div>
+
+                    <p class="text-center text-muted small mt-4 mb-0">Thank you for choosing NAYA Bubble Laundry!</p>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3 d-print-none">
+                <button type="button" class="btn btn-primary" onclick="window.print()">Print receipt</button>
+                <a href="{{ url_for('order.index') }}" class="btn btn-outline-secondary">Back to orders</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

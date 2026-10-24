@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.full_name }} - NAYA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 fw-bold mb-0">{{ customer.full_name }}</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('order.add', customer_id=customer.id) }}" class="btn btn-primary">+ New order</a>
+            <a href="{{ url_for('customer.edit', customer_id=customer.id) }}" class="btn btn-outline-primary">Edit</a>
+            <a href="{{ url_for('customer.index') }}" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Contact</h2>
+                    <p class="mb-1"><strong>Phone:</strong> {{ customer.phone }}</p>
+                    <p class="mb-1"><strong>Email:</strong> {{ customer.email or "-" }}</p>
+                    <p class="mb-1"><strong>Address:</strong> {{ customer.address or "-" }}</p>
+                    <p class="mb-0"><strong>Notes:</strong> {{ customer.notes or "-" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Orders</h2>
+                    <p class="display-6 mb-0">{{ orders|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Total spent</h2>
+                    <p class="display-6 mb-0">₱{{ total_spent }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">Order history</div>
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Service</th>
+                        <th>Weight</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td>{{ o.id }}</td>
+                        <td>{{ o.service_type }}</td>
+                        <td>{{ o.weight_kg }} kg</td>
+                        <td>₱{{ o.price }}</td>
+                        <td>{{ o.status }}</td>
+                        <td>{{ o.created_at.strftime("%b %d, %Y") }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('order.detail', order_id=o.id) }}"
+                               class="btn btn-sm btn-outline-secondary">Receipt</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card-body text-muted">This customer has no orders yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

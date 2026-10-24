@@ -3,6 +3,8 @@ import re
 from flask import (Blueprint, abort, flash, redirect, render_template,
 request, session, url_for)
 
+from decimal import Decimal
+from models.order import Order
 from models.customer import Customer
 from routes.auth import login_required
 
@@ -111,3 +113,17 @@ def delete(customer_id):
     Customer.delete(customer_id, session["user_id"])
     flash("Customer deleted.", "info")
     return redirect(url_for("customer.index"))
+
+@customer.route("/<int:customer_id>")
+@login_required
+def view(customer_id):
+    record = Customer.find_by_id(customer_id, session["user_id"])
+    if record is None:
+        abort(404)
+
+    orders = Order.find_by_customer(customer_id, session["user_id"])
+    total_spent = sum((o.price for o in orders), Decimal("0"))
+
+    return render_template("customer_detail.html", customer=record,
+                           orders=orders, total_spent=total_spent)
+

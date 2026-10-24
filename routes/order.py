@@ -86,7 +86,7 @@ def add():
         return redirect(url_for("order.index"))
 
     return render_template("order_form.html", form={}, customers=customers,
-                           services=SERVICES)
+                           services=SERVICES) 
 
 
 @order.route("/<int:order_id>/status", methods=["POST"])
@@ -116,3 +116,14 @@ def delete(order_id):
     Order.delete(order_id, session["user_id"])
     flash(f"Order #{order_id} deleted.", "info")
     return redirect(url_for("order.index"))
+
+@order.route("/<int:order_id>")
+@login_required
+def detail(order_id):
+    record = Order.find_by_id(order_id, session["user_id"])
+    if record is None:
+        abort(404)
+
+    customer = Customer.find_by_id(record.customer_id, session["user_id"])
+    return render_template("order_detail.html", order=record,
+                           customer=customer)

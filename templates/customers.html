@@ -39,7 +39,10 @@
                 <tbody>
                     {% for c in customers %}
                     <tr>
-                        <td class="fw-semibold">{{ c.full_name }}</td>
+                                                <td class="fw-semibold">
+                            <a href="{{ url_for('customer.view', customer_id=c.id) }}"
+                               class="text-decoration-none">{{ c.full_name }}</a>
+                        </td>
                         <td>{{ c.phone }}</td>
                         <td>{{ c.email or "-" }}</td>
                         <td>{{ c.address or "-" }}</td>

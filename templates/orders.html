@@ -53,6 +53,8 @@
                         </td>
                         <td>{{ o.created_at.strftime("%b %d, %Y") }}</td>
                         <td class="text-end text-nowrap">
+                                                        <a href="{{ url_for('order.detail', order_id=o.id) }}"
+                               class="btn btn-sm btn-outline-secondary">Receipt</a>
                             <form method="POST"
                                   action="{{ url_for('order.update_status', order_id=o.id) }}"
                                   class="d-inline">

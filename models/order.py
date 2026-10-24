@@ -62,14 +62,13 @@ class Order:
 
     @staticmethod
     def find_by_id(order_id, user_id):
-        rows = Order._fetch_all(
-            "SELECT o.*, c.full_name AS customer_name FROM orders o "
-            "JOIN customers c ON c.id = o.customer_id "
-            "WHERE o.id = %s AND o.user_id = %s",
-            (order_id, user_id),
-        )
-        return rows[0] if rows else None
-
+     rows = Order._fetch_all(
+        "SELECT o.*, c.full_name AS customer_name FROM orders o "
+        "JOIN customers c ON c.id = o.customer_id "
+        "WHERE o.id = %s AND o.user_id = %s",
+        (order_id, user_id),
+    )
+     return rows[0] if rows else None
     @staticmethod
     def count_by_status(user_id):
         connection = get_db_connection()
@@ -125,3 +124,12 @@ class Order:
         finally:
             cursor.close()
             connection.close()
+    @staticmethod
+    def find_by_customer(customer_id, user_id):
+        return Order._fetch_all(
+            "SELECT o.*, c.full_name AS customer_name FROM orders o "
+            "JOIN customers c ON c.id = o.customer_id "
+            "WHERE o.customer_id = %s AND o.user_id = %s "
+            "ORDER BY o.created_at DESC, o.id DESC",
+            (customer_id, user_id),
+        )
