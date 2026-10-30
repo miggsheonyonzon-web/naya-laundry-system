@@ -51,11 +51,18 @@
                             <th>Status</th>
                             <td>{{ order.status }}</td>
                         </tr>
+
+                         <tr>
+                            <th>Payment</th>
+                            <td>{{ "Paid" if order.paid else "Unpaid" }}</td>
+                        </tr>
+                        
                         {% if order.notes %}
                         <tr>
                             <th>Notes</th>
                             <td>{{ order.notes }}</td>
                         </tr>
+                        
                         {% endif %}
                     </table>
 

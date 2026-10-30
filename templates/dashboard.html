@@ -21,7 +21,32 @@
         </div>
         {% endfor %}
     </div>
-
+        <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Collected today</h2>
+                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.today) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Total collected</h2>
+                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.collected) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Unpaid balance</h2>
+                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.unpaid) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm h-100">

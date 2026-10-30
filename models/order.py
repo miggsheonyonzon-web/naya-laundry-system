@@ -16,7 +16,7 @@ STATUSES = ["Received", "Washing", "Ready", "Picked up"]
 class Order:
     def __init__(self, id, user_id, customer_id, service_type, weight_kg,
                  price, status, notes=None, created_at=None, updated_at=None,
-                 customer_name=None):
+                 customer_name=None, paid=0, paid_at=None):
         self.id = id
         self.user_id = user_id
         self.customer_id = customer_id
@@ -28,6 +28,8 @@ class Order:
         self.created_at = created_at
         self.updated_at = updated_at
         self.customer_name = customer_name
+        self.paid = bool(paid)
+        self.paid_at = paid_at
 
     @staticmethod
     def calculate_price(service_type, weight):
@@ -133,3 +135,40 @@ class Order:
             "ORDER BY o.created_at DESC, o.id DESC",
             (customer_id, user_id),
         )
+
+    @staticmethod
+    def mark_paid(order_id, user_id, paid):
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        flag = 1 if paid else 0
+        try:
+            cursor.execute(
+                "UPDATE orders SET paid = %s, "
+                "paid_at = IF(%s = 1, NOW(), NULL) "
+                "WHERE id = %s AND user_id = %s",
+                (flag, flag, order_id, user_id),
+            )
+            connection.commit()
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def revenue_summary(user_id):
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                "SELECT "
+                "COALESCE(SUM(CASE WHEN paid = 1 THEN price END), 0), "
+                "COALESCE(SUM(CASE WHEN paid = 0 THEN price END), 0), "
+                "COALESCE(SUM(CASE WHEN paid = 1 "
+                "AND DATE(paid_at) = CURDATE() THEN price END), 0) "
+                "FROM orders WHERE user_id = %s",
+                (user_id,),
+            )
+            collected, unpaid, today = cursor.fetchone()
+        finally:
+            cursor.close()
+            connection.close()
+        return {"collected": collected, "unpaid": unpaid, "today": today}

@@ -17,9 +17,12 @@ def index():
     total_customers = Customer.count(user_id)
     recent_customers = Customer.find_recent(user_id, 5)
     order_counts = Order.count_by_status(user_id)
+    revenue = Order.revenue_summary(user_id)
 
     return render_template("dashboard.html", user=user,
                            total_customers=total_customers,
                            recent_customers=recent_customers,
-                           order_counts=order_counts)
+                           order_counts=order_counts,
+                           revenue=revenue)
+                           
 

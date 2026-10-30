@@ -36,6 +36,7 @@
                         <th>Weight</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th>Created</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -51,10 +52,29 @@
                         <td>
                             <span class="badge text-bg-{{ colors[o.status] }}">{{ o.status }}</span>
                         </td>
+
+                        <td>
+                            {% if o.paid %}
+                            <span class="badge text-bg-success">Paid</span>
+                            {% else %}
+                            <span class="badge text-bg-danger">Unpaid</span>
+                            {% endif %}
+                        </td>
                         <td>{{ o.created_at.strftime("%b %d, %Y") }}</td>
+
                         <td class="text-end text-nowrap">
                                                         <a href="{{ url_for('order.detail', order_id=o.id) }}"
                                class="btn btn-sm btn-outline-secondary">Receipt</a>
+
+                        <form method="POST"
+                                  action="{{ url_for('order.toggle_paid', order_id=o.id) }}"
+                                  class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    {{ 'Mark unpaid' if o.paid else 'Mark paid' }}
+                        </button>
+                            </form>
+                            
                             <form method="POST"
                                   action="{{ url_for('order.update_status', order_id=o.id) }}"
                                   class="d-inline">

@@ -127,3 +127,17 @@ def detail(order_id):
     customer = Customer.find_by_id(record.customer_id, session["user_id"])
     return render_template("order_detail.html", order=record,
                            customer=customer)
+
+@order.route("/<int:order_id>/paid", methods=["POST"])
+@login_required
+def toggle_paid(order_id):
+    record = Order.find_by_id(order_id, session["user_id"])
+    if record is None:
+        abort(404)
+
+    now_paid = not record.paid
+    Order.mark_paid(order_id, session["user_id"], now_paid)
+
+    state = "paid" if now_paid else "unpaid"
+    flash(f"Order #{order_id} marked as {state}.", "success")
+    return redirect(url_for("order.index"))
