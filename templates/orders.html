@@ -65,6 +65,11 @@
                         <td class="text-end text-nowrap">
                                                         <a href="{{ url_for('order.detail', order_id=o.id) }}"
                                class="btn btn-sm btn-outline-secondary">Receipt</a>
+                               
+                                 {% if not o.paid %}
+                            <a href="{{ url_for('order.edit', order_id=o.id) }}"
+                               class="btn btn-sm btn-outline-primary">Edit</a>
+                            {% endif %}
 
                         <form method="POST"
                                   action="{{ url_for('order.toggle_paid', order_id=o.id) }}"
@@ -74,7 +79,7 @@
                                     {{ 'Mark unpaid' if o.paid else 'Mark paid' }}
                         </button>
                             </form>
-                            
+
                             <form method="POST"
                                   action="{{ url_for('order.update_status', order_id=o.id) }}"
                                   class="d-inline">

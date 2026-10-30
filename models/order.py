@@ -172,3 +172,21 @@ class Order:
             cursor.close()
             connection.close()
         return {"collected": collected, "unpaid": unpaid, "today": today}
+
+    @staticmethod
+    def update(order_id, user_id, customer_id, service_type, weight_kg,
+               price, notes):
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                "UPDATE orders SET customer_id = %s, service_type = %s, "
+                "weight_kg = %s, price = %s, notes = %s "
+                "WHERE id = %s AND user_id = %s",
+                (customer_id, service_type, weight_kg, price, notes or None,
+                 order_id, user_id),
+            )
+            connection.commit()
+        finally:
+            cursor.close()
+            connection.close()

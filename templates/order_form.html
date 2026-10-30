@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}New order - NAYA{% endblock %}
+{% block title %}{{ title|default('New order') }} - NAYA{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,7 +8,7 @@
         <div class="col-md-8 col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <h1 class="h4 fw-bold mb-3">New order</h1>
+                    <h1 class="h4 fw-bold mb-3">{{ title|default('New order') }}</h1>
 
                     <form method="POST" class="needs-validation" novalidate>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -58,7 +58,7 @@
                         <p class="text-muted small">The total price is calculated automatically when you save.</p>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Create order</button>
+                            <button type="submit" class="btn btn-primary">{{ button|default('Create order') }}</button>
                             <a href="{{ url_for('order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
                     </form>

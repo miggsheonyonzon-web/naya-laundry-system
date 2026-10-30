@@ -141,3 +141,47 @@ def toggle_paid(order_id):
     state = "paid" if now_paid else "unpaid"
     flash(f"Order #{order_id} marked as {state}.", "success")
     return redirect(url_for("order.index"))
+
+
+@order.route("/<int:order_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit(order_id):
+    user_id = session["user_id"]
+    record = Order.find_by_id(order_id, user_id)
+    if record is None:
+        abort(404)
+
+    if record.paid:
+        flash("Paid orders can't be edited. Mark the order unpaid first.",
+              "warning")
+        return redirect(url_for("order.index"))
+
+    customers = Customer.find_all(user_id)
+    title = f"Edit order #{order_id}"
+
+    if request.method == "POST":
+        values, weight, errors = read_and_validate(user_id)
+
+        if errors:
+            for error in errors:
+                flash(error, "danger")
+            return render_template("order_form.html", form=values,
+                                   customers=customers, services=SERVICES,
+                                   title=title, button="Save changes")
+
+        price = Order.calculate_price(values["service_type"], weight)
+        Order.update(order_id, user_id, int(values["customer_id"]),
+                     values["service_type"], weight, price, values["notes"])
+
+        flash(f"Order #{order_id} updated. New total: ₱{price}", "success")
+        return redirect(url_for("order.index"))
+
+    form = {
+        "customer_id": str(record.customer_id),
+        "service_type": record.service_type,
+        "weight_kg": str(record.weight_kg),
+        "notes": record.notes or "",
+    }
+    return render_template("order_form.html", form=form, customers=customers,
+                           services=SERVICES, title=title,
+                           button="Save changes")
