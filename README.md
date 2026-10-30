@@ -4,7 +4,6 @@ A web-based system that lets a laundry shop owner manage customers.
 Built with Flask, MySQL, Bootstrap and JavaScript.
 
 ## Features
-## Features
 - Owner registration with email OTP verification
 - Secure login, logout, session timeout and login lockout
 - Dashboard with order counts by status, revenue summary and recent customers
