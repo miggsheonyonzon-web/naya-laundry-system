@@ -1,7 +1,9 @@
 from decimal import Decimal, InvalidOperation
-
-from flask import (Blueprint, abort, flash, redirect, render_template,
-                   request, session, url_for)
+import csv
+import io
+from datetime import datetime
+from flask import (Blueprint, Response, abort, flash, redirect,
+                   render_template, request, session, url_for)
 
 from models.customer import Customer
 from models.order import SERVICES, STATUSES, Order
@@ -50,14 +52,13 @@ def read_and_validate(user_id):
 @order.route("/")
 @login_required
 def index():
-    status = request.args.get("status", "")
-    if status not in STATUSES:
-        status = ""
+    filters = read_filters()
+    orders = Order.search(session["user_id"], **filters)
+    total = sum((o.price for o in orders), Decimal("0"))
 
-    orders = Order.find_all(session["user_id"], status)
-    return render_template("orders.html", orders=orders, status=status,
-                           statuses=STATUSES)
-
+    return render_template("orders.html", orders=orders, filters=filters,
+                           status=filters["status"], statuses=STATUSES,
+                           total=total)
 
 @order.route("/add", methods=["GET", "POST"])
 @login_required
@@ -185,3 +186,67 @@ def edit(order_id):
     return render_template("order_form.html", form=form, customers=customers,
                            services=SERVICES, title=title,
                            button="Save changes")
+
+
+def read_filters():
+    """Read and clean the filter values from the URL."""
+    filters = {
+        "status": request.args.get("status", ""),
+        "payment": request.args.get("payment", ""),
+        "q": request.args.get("q", "").strip()[:100],
+        "date_from": request.args.get("date_from", ""),
+        "date_to": request.args.get("date_to", ""),
+    }
+
+    if filters["status"] not in STATUSES:
+        filters["status"] = ""
+    if filters["payment"] not in ("paid", "unpaid"):
+        filters["payment"] = ""
+
+    for key in ("date_from", "date_to"):
+        try:
+            datetime.strptime(filters[key], "%Y-%m-%d")
+        except ValueError:
+            filters[key] = ""
+
+    return filters
+
+
+def safe_cell(value):
+    """Stop spreadsheet programs from running text as a formula."""
+    text = "" if value is None else str(value)
+    if text.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + text
+    return text
+
+
+@order.route("/export")
+@login_required
+def export():
+    orders = Order.search(session["user_id"], **read_filters())
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["Order #", "Date", "Customer", "Service", "Weight (kg)",
+                     "Total", "Status", "Paid", "Notes"])
+
+    for o in orders:
+        writer.writerow([
+            o.id,
+            o.created_at.strftime("%Y-%m-%d %H:%M"),
+            safe_cell(o.customer_name),
+            safe_cell(o.service_type),
+            o.weight_kg,
+            o.price,
+            safe_cell(o.status),
+            "Yes" if o.paid else "No",
+            safe_cell(o.notes),
+        ])
+
+    # The leading \ufeff makes Excel read the file as UTF-8.
+    return Response(
+        "\ufeff" + buffer.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition":
+                 "attachment; filename=naya_orders.csv"},
+    )

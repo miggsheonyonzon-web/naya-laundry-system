@@ -190,3 +190,36 @@ class Order:
         finally:
             cursor.close()
             connection.close()
+
+    @staticmethod
+    def search(user_id, status="", payment="", q="", date_from="",
+               date_to=""):
+        query = ("SELECT o.*, c.full_name AS customer_name FROM orders o "
+                 "JOIN customers c ON c.id = o.customer_id "
+                 "WHERE o.user_id = %s")
+        params = [user_id]
+
+        if status:
+            query += " AND o.status = %s"
+            params.append(status)
+
+        if payment == "paid":
+            query += " AND o.paid = 1"
+        elif payment == "unpaid":
+            query += " AND o.paid = 0"
+
+        if q:
+            query += " AND (c.full_name LIKE %s OR o.id = %s)"
+            params.append(f"%{q}%")
+            params.append(int(q) if q.isdigit() else 0)
+
+        if date_from:
+            query += " AND DATE(o.created_at) >= %s"
+            params.append(date_from)
+
+        if date_to:
+            query += " AND DATE(o.created_at) <= %s"
+            params.append(date_to)
+
+        query += " ORDER BY o.created_at DESC, o.id DESC"
+        return Order._fetch_all(query, tuple(params))
