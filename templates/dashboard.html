@@ -3,6 +3,9 @@
 {% block title %}Dashboard - NAYA{% endblock %}
 
 {% block content %}
+
+{% set icons = {'Received': '📥', 'Washing': '🫧', 'Ready': '✅', 'Picked up': '🛍️'} %}
+
 <div class="container py-4">
     <h1 class="h3 fw-bold">Welcome, {{ user.first_name }}!</h1>
     <p class="text-muted">Here is an overview of your laundry shop.</p>
@@ -13,7 +16,7 @@
             <a href="{{ url_for('order.index', status=status) }}" class="text-decoration-none">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h2 class="h6 text-muted">{{ status }}</h2>
+                       <h2 class="h6 text-muted">{{ icons[status] }} {{ status }}</h2>
                         <p class="display-6 mb-0">{{ total }}</p>
                     </div>
                 </div>

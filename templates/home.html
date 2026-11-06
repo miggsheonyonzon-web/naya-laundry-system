@@ -4,16 +4,53 @@
 
 {% block content %}
 <section class="hero">
+    <div class="bubbles" aria-hidden="true">
+        <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
+        <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
+    </div>
     <div class="container">
-        <h1 class="display-5 fw-bold">NAYA Bubble Laundry</h1>
-        <p class="lead">Manage your laundry shop's customers in one place.</p>
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="NAYA logo" height="84" class="mb-3">
+        <h1 class="display-4">NAYA Bubble Laundry</h1>
+        <p class="lead mb-4">Keep every customer, order and payment fresh and organized in one place.</p>
 
         {% if not session.get('user_id') %}
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">Get Started</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">Get started</a>
         <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Login</a>
         {% else %}
-        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-lg">Go to dashboard</a>
         {% endif %}
+    </div>
+</section>
+
+<section class="container pb-5">
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="feature-icon">👥</div>
+                    <h2 class="h5 fw-bold">Customers</h2>
+                    <p class="text-muted mb-0">Save contact details and see each customer's full order history.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="feature-icon">🧺</div>
+                    <h2 class="h5 fw-bold">Orders</h2>
+                    <p class="text-muted mb-0">Track every load from received to picked up, with prices calculated for you.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="feature-icon">🧾</div>
+                    <h2 class="h5 fw-bold">Payments and receipts</h2>
+                    <p class="text-muted mb-0">Know who has paid, print receipts, and export your records to Excel.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
