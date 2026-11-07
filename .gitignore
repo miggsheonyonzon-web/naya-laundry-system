@@ -4,3 +4,5 @@ __pycache__/
 .env
 *.env
 schema_test.sql
+*.env
+schema_test.sql
