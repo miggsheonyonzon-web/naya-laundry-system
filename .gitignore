@@ -6,3 +6,5 @@ __pycache__/
 schema_test.sql
 *.env
 schema_test.sql
+*.env
+schema_test.sql
