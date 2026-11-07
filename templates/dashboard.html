@@ -9,6 +9,20 @@
 <div class="container py-4">
     <h1 class="h3 fw-bold">Welcome, {{ user.first_name }}!</h1>
     <p class="text-muted">Here is an overview of your laundry shop.</p>
+    
+        {% for item in supply_alerts %}
+    <div class="alert alert-{{ 'danger' if item.status == 'out' else 'warning' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+            {% if item.status == 'out' %}
+            <strong>{{ item.supply.name }} is out of stock.</strong> Restock soon.
+            {% else %}
+            <strong>{{ item.supply.name }} is running low.</strong>
+            Expected to run out on {{ item.runout.strftime("%b %d, %Y") }}.
+            {% endif %}
+        </span>
+        <a href="{{ url_for('supply.index') }}" class="btn btn-sm btn-outline-dark">View supplies</a>
+    </div>
+    {% endfor %}
 
     <div class="row g-3 mb-4">
         {% for status, total in order_counts.items() %}
