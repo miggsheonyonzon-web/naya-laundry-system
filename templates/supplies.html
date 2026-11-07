@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Supplies - NAYA{% endblock %}
+
+{% block content %}
+{% set colors = {'ok': 'success', 'low': 'warning', 'out': 'danger', 'unknown': 'secondary'} %}
+{% set labels = {'ok': 'In stock', 'low': 'Low stock', 'out': 'Out of stock', 'unknown': 'No usage data yet'} %}
+<div class="container py-4">
+    <h1 class="h3 fw-bold">Supplies</h1>
+    <p class="text-muted">Estimates are based on the kg of laundry in your orders and the usage rate you set for each supply.</p>
+
+    <div class="row g-3 mb-4">
+        {% for item in forecasts %}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h4 fw-bold mb-0">{{ item.supply.name }}</h2>
+                        <span class="badge text-bg-{{ colors[item.status] }}">{{ labels[item.status] }}</span>
+                    </div>
+
+                    <p class="display-6 mb-0">{{ "%.2f"|format(item.remaining) }} kg</p>
+                    <p class="text-muted mb-3">estimated left in stock</p>
+
+                    <p class="mb-3">
+                        {% if item.runout %}
+                        <strong>Runs out:</strong> {{ item.runout.strftime("%b %d, %Y") }}
+                        <span class="text-muted">(about {{ "%.0f"|format(item.days_left) }} days)</span>
+                        {% else %}
+                        <strong>Runs out:</strong> <span class="text-muted">not enough order data yet</span>
+                        {% endif %}
+                    </p>
+
+                    <div class="row text-center g-2 mb-3">
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light">
+                                <div class="small text-muted">Per day</div>
+                                <div class="fw-bold">{{ "%.2f"|format(item.daily_use) }} kg</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light">
+                                <div class="small text-muted">Per week</div>
+                                <div class="fw-bold">{{ "%.2f"|format(item.weekly_use) }} kg</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light">
+                                <div class="small text-muted">Per month</div>
+                                <div class="fw-bold">{{ "%.2f"|format(item.monthly_use) }} kg</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="mb-3 small">
+                        Enough to wash about <strong>{{ "{:,.0f}".format(item.capacity_kg) }} kg</strong> of laundry.
+                    </p>
+
+                    <form method="POST"
+                          action="{{ url_for('supply.update_stock', supply_id=item.supply.id) }}"
+                          class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6">
+                                <label class="form-label small mb-1">Stock counted today (kg)</label>
+                                <input type="number" class="form-control" name="counted_kg"
+                                       value="{{ '%.2f'|format(item.remaining) }}"
+                                       min="0" max="100000" step="0.01" required>
+                                <div class="invalid-feedback">Enter 0 to 100,000.</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1">Grams per kg of laundry</label>
+                                <input type="number" class="form-control" name="grams_per_kg"
+                                       value="{{ '%.2f'|format(item.supply.grams_per_kg) }}"
+                                       min="1" max="500" step="0.01" required>
+                                <div class="invalid-feedback">Enter 1 to 500.</div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-sm">Save count</button>
+                                <span class="text-muted small ms-2">After restocking, enter what's on the shelf now.</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="fw-semibold">{{ month.strftime("%B %Y") }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('supply.index', month=prev_month.strftime('%Y-%m')) }}">&laquo; Prev</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('supply.index') }}">Today</a>
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('supply.index', month=next_month.strftime('%Y-%m')) }}">Next &raquo;</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0 cal-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in weeks %}
+                    <tr>
+                        {% for day in week %}
+                        <td class="cal-day {% if day.month != month.month %}cal-other{% endif %} {% if day == today %}cal-today{% endif %}">
+                            <div class="num">{{ day.day }}</div>
+                            {% for label, kind in events.get(day, []) %}
+                            <span class="badge text-bg-{{ kind }}">{{ label }}</span>
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body small text-muted">
+            <span class="badge text-bg-danger">Red</span> the day a supply is expected to run out &nbsp;
+            <span class="badge text-bg-warning">Yellow</span> the last day to order before it runs low (7 days ahead)
+        </div>
+    </div>
+</div>
+{% endblock %}

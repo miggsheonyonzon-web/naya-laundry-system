@@ -49,3 +49,14 @@ CREATE TABLE orders (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
+
+CREATE TABLE supplies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    counted_kg DECIMAL(10,2) NOT NULL DEFAULT 0,
+    counted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    grams_per_kg DECIMAL(8,2) NOT NULL DEFAULT 50,
+    UNIQUE KEY unique_supply (user_id, name),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

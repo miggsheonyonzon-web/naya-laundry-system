@@ -7,6 +7,7 @@ from routes.profile import profile
 from routes.customer import customer
 from flask_wtf.csrf import CSRFError
 from routes.order import order
+from routes.supply import supply
 
 
 
@@ -28,6 +29,7 @@ app.register_blueprint(dashboard)
 app.register_blueprint(profile)
 app.register_blueprint(customer)
 app.register_blueprint(order)
+app.register_blueprint(supply) 
 
 @app.route("/")
 def home():
