@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Payment QR codes - NAYA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 fw-bold">Payment QR codes</h1>
+    <p class="text-muted">
+        Upload your shop's own QR code from your wallet or bank app (a screenshot works).
+        It appears on receipts so customers can scan and pay.
+        <strong>Check your wallet app before confirming a payment</strong>, because this system can't see incoming money.
+    </p>
+
+    <div class="row g-3">
+        {% for m in methods %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body p-4 text-center">
+                    <h2 class="h4 fw-bold">{{ m.label }}</h2>
+
+                    {% if m.qr_file %}
+                    <img src="{{ url_for('static', filename='uploads/qr/' ~ m.qr_file) }}"
+                         alt="{{ m.label }} QR code" class="img-fluid rounded-3 border my-3"
+                         style="max-width: 240px;">
+                    <span class="badge text-bg-success d-block mb-3">QR saved</span>
+                    {% else %}
+                    <p class="text-muted my-4">No QR uploaded yet.</p>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data"
+                          action="{{ url_for('payment.upload_qr', name=m.name) }}"
+                          class="mb-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="file" class="form-control mb-2" name="qr"
+                               accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            {{ 'Replace QR' if m.qr_file else 'Upload QR' }}
+                        </button>
+                    </form>
+
+                    {% if m.qr_file %}
+                    <form method="POST" action="{{ url_for('payment.remove_qr', name=m.name) }}"
+                          data-confirm="Remove the {{ m.label }} QR?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <p class="small text-muted mt-3">PNG or JPG, up to 2 MB.</p>
+</div>
+{% endblock %}

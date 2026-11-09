@@ -60,3 +60,18 @@ CREATE TABLE supplies (
     UNIQUE KEY unique_supply (user_id, name),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE payment_methods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(30) NOT NULL,
+    qr_file VARCHAR(100) NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_method (user_id, name),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+ALTER TABLE orders
+    ADD COLUMN payment_method VARCHAR(30) NULL,
+    ADD COLUMN payment_ref VARCHAR(50) NULL,
+    ADD UNIQUE KEY unique_payment_ref (user_id, payment_ref);

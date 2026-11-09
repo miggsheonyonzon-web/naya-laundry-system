@@ -11,6 +11,7 @@ class Config:
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    MAX_CONTENT_LENGTH = 3 * 1024 * 1024
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
     MYSQL_HOST = os.environ.get("MYSQL_HOST", "localhost")
