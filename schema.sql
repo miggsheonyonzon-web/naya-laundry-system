@@ -75,3 +75,17 @@ ALTER TABLE orders
     ADD COLUMN payment_method VARCHAR(30) NULL,
     ADD COLUMN payment_ref VARCHAR(50) NULL,
     ADD UNIQUE KEY unique_payment_ref (user_id, payment_ref);
+
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    kind VARCHAR(20) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    customer_id INT NULL,
+    order_id INT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_read (user_id, is_read),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+);

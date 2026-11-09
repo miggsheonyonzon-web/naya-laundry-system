@@ -11,6 +11,13 @@
             <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
         </div>
 
+    {% if focus %}
+    <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Showing orders for <strong>{{ focus.full_name }}</strong> ({{ focus.phone }}).</span>
+        <a href="{{ url_for('order.index') }}" class="btn btn-sm btn-outline-dark">Show all orders</a>
+    </div>
+    {% endif %}
+
     <ul class="nav nav-pills mb-3">
         <li class="nav-item">
             <a class="nav-link {% if not status %}active{% endif %}"

@@ -9,6 +9,7 @@ from flask_wtf.csrf import CSRFError
 from routes.order import order
 from routes.supply import supply
 from routes.volume import volume
+from routes.notification import build_notification_context, notification
 from routes.payment import payment
 
 # Blueprints still to come:
@@ -30,7 +31,8 @@ app.register_blueprint(profile)
 app.register_blueprint(customer)
 app.register_blueprint(order)
 app.register_blueprint(supply) 
-app.register_blueprint(volume) 
+app.register_blueprint(volume)
+app.register_blueprint(notification) 
 app.register_blueprint(payment) 
 
 @app.route("/")
@@ -59,6 +61,14 @@ def csrf_error(error):
 @app.errorhandler(413)
 def too_large(error):
     return show_error(413, "That file is too large. Please upload an image under 2 MB.")
+
+@app.context_processor
+def inject_notifications():
+    user_id = session.get("user_id")
+    if not user_id:
+        return {}
+    return build_notification_context(user_id)
+
 
 @app.after_request
 def add_security_headers(response):

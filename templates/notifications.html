@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - NAYA{% endblock %}
+
+{% block content %}
+{% set icons = {'restock': '📦', 'remind': '⏰', 'order_new': '🧺', 'status': '🔄', 'paid': '💰'} %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 fw-bold mb-0">Notifications</h1>
+        {% if nav_unread %}
+        <form method="POST" action="{{ url_for('notification.read_all') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-primary btn-sm">Mark all as read</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if nav_alerts %}
+    <h2 class="h6 text-muted text-uppercase">Needs attention</h2>
+    <div class="card mb-4">
+        <div class="list-group list-group-flush">
+            {% for a in nav_alerts %}
+            <a class="list-group-item list-group-item-action" href="{{ a.url }}">
+                {{ icons[a.kind] }} {{ a.text }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <h2 class="h6 text-muted text-uppercase">Activity</h2>
+    {% if items %}
+    <div class="card">
+        <div class="list-group list-group-flush">
+            {% for n in items %}
+            <form method="POST" action="{{ url_for('notification.open_notification', notification_id=n.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="list-group-item list-group-item-action text-start {% if not n.is_read %}notif-unread{% endif %}">
+                    {{ icons[n.kind] }} {{ n.message }}
+                    <small class="text-muted d-block">{{ n.when }}</small>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card"><div class="card-body text-muted">No activity yet. New orders, status changes and payments will appear here.</div></div>
+    {% endif %}
+</div>
+{% endblock %}

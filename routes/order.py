@@ -8,6 +8,7 @@ from flask import (Blueprint, Response, abort, flash, redirect,
 from models.customer import Customer
 from models.order import SERVICES, STATUSES, Order
 from routes.auth import login_required
+from routes.notification import notify_new_order, notify_paid, notify_status
 
 order = Blueprint("order", __name__, url_prefix="/orders")
 
@@ -54,11 +55,16 @@ def read_and_validate(user_id):
 def index():
     filters = read_filters()
     orders = Order.search(session["user_id"], **filters)
+    focus = None
+    if filters["customer_id"]:
+        focus = Customer.find_by_id(int(filters["customer_id"]),
+                                    session["user_id"])
+
     total = sum((o.price for o in orders), Decimal("0"))
 
     return render_template("orders.html", orders=orders, filters=filters,
                            status=filters["status"], statuses=STATUSES,
-                           total=total)
+                           total=total, focus=focus)
 
 @order.route("/add", methods=["GET", "POST"])
 @login_required
@@ -83,6 +89,7 @@ def add():
         Order.create(user_id, int(values["customer_id"]),
                      values["service_type"], weight, price, values["notes"])
 
+        notify_new_order(user_id, Order.latest_id(user_id))
         flash(f"Order created. Total: ₱{price}", "success")
         return redirect(url_for("order.index"))
 
@@ -102,6 +109,7 @@ def update_status(order_id):
         flash("Invalid status.", "danger")
     else:
         Order.update_status(order_id, session["user_id"], status)
+        notify_status(session["user_id"], record, status)
         flash(f"Order #{order_id} marked as {status}.", "success")
 
     return redirect(url_for("order.index"))
@@ -139,6 +147,7 @@ def toggle_paid(order_id):
     now_paid = not record.paid
     Order.mark_paid(order_id, session["user_id"], now_paid)
 
+    notify_paid(session["user_id"], record, now_paid)
     state = "paid" if now_paid else "unpaid"
     flash(f"Order #{order_id} marked as {state}.", "success")
     return redirect(url_for("order.index"))
@@ -196,10 +205,14 @@ def read_filters():
         "q": request.args.get("q", "").strip()[:100],
         "date_from": request.args.get("date_from", ""),
         "date_to": request.args.get("date_to", ""),
+        "customer_id": request.args.get("customer_id", ""),
     }
 
     if filters["status"] not in STATUSES:
         filters["status"] = ""
+    if not filters["customer_id"].isdigit():
+        filters["customer_id"] = ""
+
     if filters["payment"] not in ("paid", "unpaid"):
         filters["payment"] = ""
 

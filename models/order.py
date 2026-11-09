@@ -195,7 +195,7 @@ class Order:
 
     @staticmethod
     def search(user_id, status="", payment="", q="", date_from="",
-               date_to=""):
+               date_to="", customer_id=""):
         query = ("SELECT o.*, c.full_name AS customer_name FROM orders o "
                  "JOIN customers c ON c.id = o.customer_id "
                  "WHERE o.user_id = %s")
@@ -209,6 +209,10 @@ class Order:
             query += " AND o.paid = 1"
         elif payment == "unpaid":
             query += " AND o.paid = 0"
+
+        if customer_id:
+            query += " AND o.customer_id = %s"
+            params.append(customer_id)
 
         if q:
             query += " AND (c.full_name LIKE %s OR o.id = %s)"
@@ -294,3 +298,42 @@ class Order:
             cursor.close()
             connection.close()
         return used
+
+    @staticmethod
+    def latest_id(user_id):
+        """The id of the order created most recently."""
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT MAX(id) FROM orders WHERE user_id = %s",
+                           (user_id,))
+            newest = cursor.fetchone()[0]
+        finally:
+            cursor.close()
+            connection.close()
+        return newest
+
+    @staticmethod
+    def stale_orders(user_id, ready_days=1, progress_days=2):
+        """Orders nobody has updated for too long (the 'you forgot' list)."""
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                "SELECT o.id, o.customer_id, o.status, "
+                "c.full_name AS customer_name, "
+                "TIMESTAMPDIFF(DAY, o.updated_at, NOW()) AS days "
+                "FROM orders o JOIN customers c ON c.id = o.customer_id "
+                "WHERE o.user_id = %s AND ("
+                "(o.status = 'Ready' "
+                "AND o.updated_at < NOW() - INTERVAL %s DAY) "
+                "OR (o.status IN ('Received', 'Washing') "
+                "AND o.updated_at < NOW() - INTERVAL %s DAY)) "
+                "ORDER BY o.updated_at",
+                (user_id, ready_days, progress_days),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.close()
+            connection.close()
+        return rows
