@@ -223,3 +223,24 @@ class Order:
 
         query += " ORDER BY o.created_at DESC, o.id DESC"
         return Order._fetch_all(query, tuple(params))
+
+    @staticmethod
+    def daily_totals(user_id, start, end):
+        """kg of laundry and number of orders for each day from start to end."""
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                "SELECT DATE(created_at), COALESCE(SUM(weight_kg), 0), COUNT(*) "
+                "FROM orders WHERE user_id = %s "
+                "AND DATE(created_at) BETWEEN %s AND %s "
+                "GROUP BY DATE(created_at)",
+                (user_id, start, end),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.close()
+            connection.close()
+
+        return {day: {"kg": Decimal(kg), "orders": count}
+                for day, kg, count in rows}

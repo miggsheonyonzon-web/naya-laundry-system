@@ -5,6 +5,7 @@ from models.order import Order
 from models.supply import Supply
 from models.user import User
 from routes.auth import login_required
+from routes.volume import current_summary
 
 dashboard = Blueprint("dashboard", __name__)
 
@@ -19,6 +20,7 @@ def index():
     recent_customers = Customer.find_recent(user_id, 5)
     order_counts = Order.count_by_status(user_id)
     revenue = Order.revenue_summary(user_id)
+    laundry = current_summary(user_id)
     supply_alerts = [item for item in Supply.forecast(user_id)
                      if item["status"] in ("low", "out")]
 
@@ -27,4 +29,5 @@ def index():
                            recent_customers=recent_customers,
                            order_counts=order_counts,
                            revenue=revenue,
+                           laundry=laundry,
                            supply_alerts=supply_alerts)

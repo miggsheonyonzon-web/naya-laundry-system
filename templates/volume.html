@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Laundry volume - NAYA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 fw-bold">Laundry volume</h1>
+    <p class="text-muted">Every order you save is counted here automatically, by the day it was received.</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Today</h2>
+                    <p class="display-6 mb-0">{{ "%.1f"|format(summary.today.kg) }} kg</p>
+                    <small class="text-muted">{{ summary.today.orders }} order{{ '' if summary.today.orders == 1 else 's' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">This week</h2>
+                    <p class="display-6 mb-0">{{ "%.1f"|format(summary.week.kg) }} kg</p>
+                    <small class="text-muted">{{ summary.week.orders }} order{{ '' if summary.week.orders == 1 else 's' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">This month</h2>
+                    <p class="display-6 mb-0">{{ "%.1f"|format(summary.month.kg) }} kg</p>
+                    <small class="text-muted">{{ summary.month.orders }} order{{ '' if summary.month.orders == 1 else 's' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Average per day</h2>
+                    <p class="display-6 mb-0">{{ "%.1f"|format(summary.avg_per_day) }} kg</p>
+                    <small class="text-muted">this month so far</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="fw-semibold">
+                {{ month.strftime("%B %Y") }}
+                <span class="text-muted fw-normal">
+                    &middot; {{ "%.1f"|format(month_kg) }} kg in {{ month_orders }} order{{ '' if month_orders == 1 else 's' }}
+                    {% if busiest %}
+                    &middot; busiest day {{ busiest[0].strftime("%b %d") }} ({{ "%.1f"|format(busiest[1].kg) }} kg)
+                    {% endif %}
+                </span>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('volume.index', month=prev_month.strftime('%Y-%m')) }}">&laquo; Prev</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('volume.index') }}">Today</a>
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('volume.index', month=next_month.strftime('%Y-%m')) }}">Next &raquo;</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0 cal-table cal-wide">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                        <th>Week total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week, week_total in rows %}
+                    <tr>
+                        {% for day in week %}
+                        {% set item = totals.get(day) %}
+                        <td class="cal-day heat-{{ levels.get(day, 0) }} {% if day.month != month.month %}cal-other{% endif %} {% if day == today %}cal-today{% endif %}">
+                            <div class="num">{{ day.day }}</div>
+                            {% if item %}
+                            <a href="{{ url_for('order.index', date_from=day.isoformat(), date_to=day.isoformat()) }}"
+                               class="text-decoration-none">
+                                <div class="kg">{{ "%.1f"|format(item.kg) }} kg</div>
+                                <div class="small">{{ item.orders }} order{{ '' if item.orders == 1 else 's' }}</div>
+                            </a>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="cal-week">
+                            {{ "%.1f"|format(week_total[0]) }} kg<br>
+                            <small class="text-muted">{{ week_total[1] }} order{{ '' if week_total[1] == 1 else 's' }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body small text-muted">
+            Darker days mean more laundry. Click a day's kg to see that day's orders.
+            Days from the neighboring months appear faded but still count in their week total.
+        </div>
+    </div>
+</div>
+{% endblock %}

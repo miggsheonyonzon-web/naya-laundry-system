@@ -42,6 +42,37 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-success">
                 <div class="card-body">
+                        <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Laundry today</h2>
+                    <p class="h3 mb-0">{{ "%.1f"|format(laundry.today.kg) }} kg</p>
+                    <small class="text-muted">{{ laundry.today.orders }} orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Laundry this week</h2>
+                    <p class="h3 mb-0">{{ "%.1f"|format(laundry.week.kg) }} kg</p>
+                    <small class="text-muted">{{ laundry.week.orders }} orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('volume.index') }}" class="text-decoration-none">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h6 text-muted">Laundry this month</h2>
+                        <p class="h3 mb-0">{{ "%.1f"|format(laundry.month.kg) }} kg</p>
+                        <small class="text-muted">{{ laundry.month.orders }} orders &middot; view calendar</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
                     <h2 class="h6 text-muted">Collected today</h2>
                     <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.today) }}</p>
                 </div>
