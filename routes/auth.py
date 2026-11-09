@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from functools import wraps
 from time import time
 
-from flask import (Blueprint, flash, redirect, render_template, request,
-                   session, url_for)
+from flask import (Blueprint, current_app, flash, redirect, render_template,
+                   request, session, url_for)
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
 
@@ -124,11 +124,13 @@ def register():
 
         try:
             send_otp_email(email, first_name, otp)
-        except Exception:
+        except Exception as error:
+            current_app.logger.exception("Could not send OTP email")
             PendingRegistration.delete_by_email(email)
             flash("We could not send the verification email. "
                   "Check the MAIL settings in your .env file.", "danger")
             return render_template("register.html", form=request.form)
+        
 
         session["pending_email"] = email
         flash("We sent a 6-digit code to your email.", "info")
@@ -210,3 +212,19 @@ def logout():
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for("auth.login"))
+
+
+def send_with_retry(message, attempts=3):
+    """Send an email, retrying when the connection to Gmail drops."""
+    import smtplib
+    import time
+
+    for attempt in range(1, attempts + 1):
+        try:
+            mail.send(message)
+            return
+        except (smtplib.SMTPServerDisconnected, ConnectionError, TimeoutError):
+            current_app.logger.warning("Email attempt %s failed", attempt)
+            if attempt == attempts:
+                raise
+            time.sleep(2)
