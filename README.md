@@ -69,3 +69,10 @@ Built with Flask, MySQL, Bootstrap and JavaScript.
 
 ## Author
 [ your name, section, course ]
+
+### Troubleshooting
+- **"We could not send the verification email":** the OTP email is sent through Gmail.
+  Use a Gmail App Password in `.env`, not your normal password, then restart the app,
+  because `.env` is only read at startup. The app retries automatically if Gmail drops
+  the connection.
+- **"Can't connect to MySQL server":** start MySQL in XAMPP first.
