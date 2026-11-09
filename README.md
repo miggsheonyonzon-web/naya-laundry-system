@@ -16,6 +16,7 @@ Built with Flask, MySQL, Bootstrap and JavaScript.
 - Order search, filters (status, payment, date range) and CSV export
 - Server-side and client-side validation, responsive design
 - Supplies tracking: stock levels, usage forecast, low-stock alerts and a run-out calendar
+- Laundry volume tracking: kg per day, week and month, with a calendar (counted automatically from orders)
 
 ## Security
 - Passwords hashed with Werkzeug
