@@ -1,27 +1,20 @@
 {% set ep = request.endpoint or '' %}
+{% set items = [
+    ('dashboard.', 'dashboard.index', '🏠', 'Dashboard'),
+    ('customer.', 'customer.index', '👥', 'Customers'),
+    ('order.', 'order.index', '🧺', 'Orders'),
+    ('supply.', 'supply.index', '📦', 'Supplies'),
+    ('volume.', 'volume.index', '📊', 'Volume'),
+    ('payment.', 'payment.settings', '💳', 'Payments'),
+] %}
 <nav class="side-nav" aria-label="Sections">
-    <a class="side-link {% if ep.startswith('dashboard.') %}active{% endif %}"
-       href="{{ url_for('dashboard.index') }}" {% if ep.startswith('dashboard.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">🏠</span> Dashboard
+    {% for prefix, endpoint, icon, label in items %}
+    {% set is_active = ep.startswith(prefix) %}
+    <a class="side-link {% if is_active %}active{% endif %}"
+       href="{{ url_for(endpoint) }}" data-label="{{ label }}"
+       {% if is_active %}aria-current="page"{% endif %}>
+        <span class="side-icon" aria-hidden="true">{{ icon }}</span>
+        <span class="side-label">{{ label }}</span>
     </a>
-    <a class="side-link {% if ep.startswith('customer.') %}active{% endif %}"
-       href="{{ url_for('customer.index') }}" {% if ep.startswith('customer.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">👥</span> Customers
-    </a>
-    <a class="side-link {% if ep.startswith('order.') %}active{% endif %}"
-       href="{{ url_for('order.index') }}" {% if ep.startswith('order.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">🧺</span> Orders
-    </a>
-    <a class="side-link {% if ep.startswith('supply.') %}active{% endif %}"
-       href="{{ url_for('supply.index') }}" {% if ep.startswith('supply.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">📦</span> Supplies
-    </a>
-    <a class="side-link {% if ep.startswith('volume.') %}active{% endif %}"
-       href="{{ url_for('volume.index') }}" {% if ep.startswith('volume.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">📊</span> Volume
-    </a>
-    <a class="side-link {% if ep.startswith('payment.') %}active{% endif %}"
-       href="{{ url_for('payment.settings') }}" {% if ep.startswith('payment.') %}aria-current="page"{% endif %}>
-        <span class="side-icon" aria-hidden="true">💳</span> Payments
-    </a>
+    {% endfor %}
 </nav>
