@@ -19,125 +19,140 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     {% set icons = {'restock': '📦', 'remind': '⏰', 'order_new': '🧺', 'status': '🔄', 'paid': '💰'} %}
+    {% set logged_in = session.get('user_id') %}
 
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-naya d-print-none">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+    <nav class="navbar navbar-expand navbar-dark navbar-naya sticky-top d-print-none">
+        <div class="container-fluid px-3 px-lg-4">
+            {% if logged_in %}
+            <button class="btn text-white fs-4 lh-1 p-1 me-2 d-lg-none" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
+                    aria-controls="sidebarMenu" aria-label="Open menu">&#9776;</button>
+            {% endif %}
+
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('home') }}">
                 <img src="{{ url_for('static', filename='images/naya.jpg') }}"
                      alt="NAYA Bubble Laundry logo" width="42" height="42" class="logo-round me-2">
-                NAYA Bubble Laundry
+                <span class="d-none d-sm-inline">NAYA Bubble Laundry</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navMenu" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <ul class="navbar-nav flex-row align-items-center ms-auto gap-1">
+                {% if logged_in %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link position-relative" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                        <span aria-hidden="true">🔔</span>
+                        {% if nav_badge %}
+                        <span class="badge rounded-pill text-bg-danger notif-badge">{{ nav_badge if nav_badge < 100 else '99+' }}</span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end notif-menu p-0">
+                        <div class="notif-head d-flex justify-content-between align-items-center">
+                            <strong>Notifications</strong>
+                            {% if nav_unread %}
+                            <form method="POST" action="{{ url_for('notification.read_all') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-link btn-sm p-0">Mark all read</button>
+                            </form>
+                            {% endif %}
+                        </div>
 
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    {% if session.get('user_id') %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('customer.index') }}">Customers</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('order.index') }}">Orders</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('supply.index') }}">Supplies</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('volume.index') }}">Volume</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('payment.settings') }}">Payments</a></li>
+                        {% if nav_alerts %}
+                        <div class="notif-section">Needs attention</div>
+                        {% for a in nav_alerts %}
+                        <a class="dropdown-item notif-item" href="{{ a.url }}">
+                            <span aria-hidden="true">{{ icons[a.kind] }}</span>
+                            <span>{{ a.text }}</span>
+                        </a>
+                        {% endfor %}
+                        {% endif %}
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link position-relative" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                                <span aria-hidden="true">🔔</span>
-                                {% if nav_badge %}
-                                <span class="badge rounded-pill text-bg-danger notif-badge">{{ nav_badge if nav_badge < 100 else '99+' }}</span>
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end notif-menu p-0">
-                                <div class="notif-head d-flex justify-content-between align-items-center">
-                                    <strong>Notifications</strong>
-                                    {% if nav_unread %}
-                                    <form method="POST" action="{{ url_for('notification.read_all') }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-link btn-sm p-0">Mark all read</button>
-                                    </form>
-                                    {% endif %}
-                                </div>
+                        {% if nav_notifications %}
+                        <div class="notif-section">Recent activity</div>
+                        {% for n in nav_notifications %}
+                        <form method="POST" action="{{ url_for('notification.open_notification', notification_id=n.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="dropdown-item notif-item {% if not n.is_read %}notif-unread{% endif %}">
+                                <span aria-hidden="true">{{ icons[n.kind] }}</span>
+                                <span>{{ n.message }}<small class="text-muted d-block">{{ n.when }}</small></span>
+                            </button>
+                        </form>
+                        {% endfor %}
+                        {% endif %}
 
-                                {% if nav_alerts %}
-                                <div class="notif-section">Needs attention</div>
-                                {% for a in nav_alerts %}
-                                <a class="dropdown-item notif-item" href="{{ a.url }}">
-                                    <span aria-hidden="true">{{ icons[a.kind] }}</span>
-                                    <span>{{ a.text }}</span>
-                                </a>
-                                {% endfor %}
-                                {% endif %}
+                        {% if not nav_alerts and not nav_notifications %}
+                        <div class="p-4 text-center text-muted">You're all caught up.</div>
+                        {% endif %}
 
-                                {% if nav_notifications %}
-                                <div class="notif-section">Recent activity</div>
-                                {% for n in nav_notifications %}
-                                <form method="POST" action="{{ url_for('notification.open_notification', notification_id=n.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="dropdown-item notif-item {% if not n.is_read %}notif-unread{% endif %}">
-                                        <span aria-hidden="true">{{ icons[n.kind] }}</span>
-                                        <span>{{ n.message }}<small class="text-muted d-block">{{ n.when }}</small></span>
-                                    </button>
-                                </form>
-                                {% endfor %}
-                                {% endif %}
+                        <a class="dropdown-item text-center small fw-semibold py-2"
+                           href="{{ url_for('notification.index') }}">See all notifications</a>
+                    </div>
+                </li>
 
-                                {% if not nav_alerts and not nav_notifications %}
-                                <div class="p-4 text-center text-muted">You're all caught up.</div>
-                                {% endif %}
-
-                                <a class="dropdown-item text-center small fw-semibold py-2"
-                                   href="{{ url_for('notification.index') }}">See all notifications</a>
-                            </div>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <span aria-hidden="true">👤</span>
+                        <span class="d-none d-md-inline">{{ session.get('user_name', 'Account') }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('profile.index') }}">Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.change_password') }}">Change password</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ url_for('auth.logout') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item text-danger">Logout</button>
+                            </form>
                         </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ session.get('user_name', 'Account') }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('profile.index') }}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('profile.change_password') }}">Change password</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('auth.logout') }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="dropdown-item text-danger">Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-light btn-sm ms-lg-2" href="{{ url_for('auth.register') }}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-light btn-sm ms-1" href="{{ url_for('auth.register') }}">Register</a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
     </nav>
 
-    <main class="flex-grow-1">
-        <div class="container mt-3 d-print-none">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endwith %}
-        </div>
+    <div class="app-shell d-flex flex-grow-1">
+        {% if logged_in %}
+        <aside class="sidebar d-none d-lg-block d-print-none" aria-label="Main menu">
+            {% include "_sidebar_links.html" %}
+        </aside>
+        {% endif %}
 
-        {% block content %}{% endblock %}
-    </main>
+        <main class="app-main flex-grow-1">
+            <div class="container mt-3 d-print-none">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+            </div>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% if logged_in %}
+    <div class="offcanvas offcanvas-start d-lg-none d-print-none" tabindex="-1"
+         id="sidebarMenu" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold" id="sidebarLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            {% include "_sidebar_links.html" %}
+        </div>
+    </div>
+    {% endif %}
 
     <footer class="site-footer d-print-none">
         <div class="container">&copy; NAYA Bubble Laundry &middot; Fresh clothes, happy customers</div>

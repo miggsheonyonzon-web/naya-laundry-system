@@ -3,14 +3,12 @@
 {% block title %}Dashboard - NAYA{% endblock %}
 
 {% block content %}
-
-{% set icons = {'Received': '📥', 'Washing': '🫧', 'Ready': '✅', 'Picked up': '🛍️'} %}
-
+{% set status_icons = {'Received': '📥', 'Washing': '🫧', 'Ready': '✅', 'Picked up': '🛍️'} %}
 <div class="container py-4">
     <h1 class="h3 fw-bold">Welcome, {{ user.first_name }}!</h1>
     <p class="text-muted">Here is an overview of your laundry shop.</p>
-    
-        {% for item in supply_alerts %}
+
+    {% for item in supply_alerts %}
     <div class="alert alert-{{ 'danger' if item.status == 'out' else 'warning' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
         <span>
             {% if item.status == 'out' %}
@@ -28,9 +26,9 @@
         {% for status, total in order_counts.items() %}
         <div class="col-6 col-md-3">
             <a href="{{ url_for('order.index', status=status) }}" class="text-decoration-none">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body">
-                       <h2 class="h6 text-muted">{{ icons[status] }} {{ status }}</h2>
+                        <h2 class="h6 text-muted">{{ status_icons[status] }} {{ status }}</h2>
                         <p class="display-6 mb-0">{{ total }}</p>
                     </div>
                 </div>
@@ -38,13 +36,10 @@
         </div>
         {% endfor %}
     </div>
-        <div class="row g-3 mb-4">
+
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm border-success">
-                <div class="card-body">
-                        <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Laundry today</h2>
                     <p class="h3 mb-0">{{ "%.1f"|format(laundry.today.kg) }} kg</p>
@@ -53,7 +48,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Laundry this week</h2>
                     <p class="h3 mb-0">{{ "%.1f"|format(laundry.week.kg) }} kg</p>
@@ -63,7 +58,7 @@
         </div>
         <div class="col-md-4">
             <a href="{{ url_for('volume.index') }}" class="text-decoration-none">
-                <div class="card">
+                <div class="card h-100">
                     <div class="card-body">
                         <h2 class="h6 text-muted">Laundry this month</h2>
                         <p class="h3 mb-0">{{ "%.1f"|format(laundry.month.kg) }} kg</p>
@@ -72,14 +67,19 @@
                 </div>
             </a>
         </div>
-    </div>      
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-success">
+                <div class="card-body">
                     <h2 class="h6 text-muted">Collected today</h2>
                     <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.today) }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card h-100">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Total collected</h2>
                     <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.collected) }}</p>
@@ -87,7 +87,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm border-danger">
+            <div class="card h-100 border-danger">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Unpaid balance</h2>
                     <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.unpaid) }}</p>
@@ -95,9 +95,10 @@
             </div>
         </div>
     </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm h-100">
+            <div class="card h-100">
                 <div class="card-body">
                     <h2 class="h6 text-muted">Total customers</h2>
                     <p class="display-6 mb-2">{{ total_customers }}</p>
@@ -106,7 +107,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm h-100">
+            <div class="card h-100">
                 <div class="card-body d-flex flex-column justify-content-center gap-2">
                     <h2 class="h6 text-muted">Quick actions</h2>
                     <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
@@ -116,7 +117,7 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-header bg-white fw-semibold">Recently added customers</div>
         {% if recent_customers %}
         <div class="table-responsive">
@@ -124,7 +125,9 @@
                 <tbody>
                     {% for c in recent_customers %}
                     <tr>
-                        <td class="fw-semibold">{{ c.full_name }}</td>
+                        <td class="fw-semibold">
+                            <a href="{{ url_for('customer.view', customer_id=c.id) }}" class="text-decoration-none">{{ c.full_name }}</a>
+                        </td>
                         <td>{{ c.phone }}</td>
                         <td class="text-muted">{{ c.created_at.strftime("%b %d, %Y") }}</td>
                     </tr>
