@@ -1,12 +1,17 @@
 {% extends "base.html" %}
+{% from "_ui.html" import hero, stat %}
 
 {% block title %}Dashboard - NAYA{% endblock %}
 
 {% block content %}
 {% set status_icons = {'Received': '📥', 'Washing': '🫧', 'Ready': '✅', 'Picked up': '🛍️'} %}
-<div class="container py-4">
-    <h1 class="h3 fw-bold">Welcome, {{ user.first_name }}!</h1>
-    <p class="text-muted">Here is an overview of your laundry shop.</p>
+{% set status_tones = {'Received': 'sky', 'Washing': 'violet', 'Ready': 'green', 'Picked up': 'amber'} %}
+<div class="page-wrap">
+
+    {% call hero('Welcome back, ' ~ user.first_name ~ '!', 'Here is how your laundry shop is doing today.', '🫧') %}
+        <a href="{{ url_for('order.add') }}" class="btn btn-light">+ New order</a>
+        <a href="{{ url_for('customer.add') }}" class="btn btn-outline-light">+ Add customer</a>
+    {% endcall %}
 
     {% for item in supply_alerts %}
     <div class="alert alert-{{ 'danger' if item.status == 'out' else 'warning' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -22,122 +27,82 @@
     </div>
     {% endfor %}
 
-    <div class="row g-3 mb-4">
+    <div class="section-title">Orders</div>
+    <div class="row g-3">
         {% for status, total in order_counts.items() %}
-        <div class="col-6 col-md-3">
-            <a href="{{ url_for('order.index', status=status) }}" class="text-decoration-none">
-                <div class="card">
-                    <div class="card-body">
-                        <h2 class="h6 text-muted">{{ status_icons[status] }} {{ status }}</h2>
-                        <p class="display-6 mb-0">{{ total }}</p>
-                    </div>
-                </div>
-            </a>
+        <div class="col-6 col-xl-3">
+            {{ stat(status, total, status_icons[status], status_tones[status], 'orders', url_for('order.index', status=status)) }}
         </div>
         {% endfor %}
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Laundry today</h2>
-                    <p class="h3 mb-0">{{ "%.1f"|format(laundry.today.kg) }} kg</p>
-                    <small class="text-muted">{{ laundry.today.orders }} orders</small>
-                </div>
-            </div>
+    <div class="section-title">Laundry volume</div>
+    <div class="row g-3">
+        <div class="col-6 col-xl-3">
+            {{ stat('Today', "%.1f"|format(laundry.today.kg) ~ ' kg', '🧺', 'sky', laundry.today.orders ~ ' orders') }}
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Laundry this week</h2>
-                    <p class="h3 mb-0">{{ "%.1f"|format(laundry.week.kg) }} kg</p>
-                    <small class="text-muted">{{ laundry.week.orders }} orders</small>
-                </div>
-            </div>
+        <div class="col-6 col-xl-3">
+            {{ stat('This week', "%.1f"|format(laundry.week.kg) ~ ' kg', '📅', 'teal', laundry.week.orders ~ ' orders') }}
         </div>
-        <div class="col-md-4">
-            <a href="{{ url_for('volume.index') }}" class="text-decoration-none">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 text-muted">Laundry this month</h2>
-                        <p class="h3 mb-0">{{ "%.1f"|format(laundry.month.kg) }} kg</p>
-                        <small class="text-muted">{{ laundry.month.orders }} orders &middot; view calendar</small>
-                    </div>
-                </div>
-            </a>
+        <div class="col-6 col-xl-3">
+            {{ stat('This month', "%.1f"|format(laundry.month.kg) ~ ' kg', '🗓️', 'violet', laundry.month.orders ~ ' orders · view calendar', url_for('volume.index')) }}
+        </div>
+        <div class="col-6 col-xl-3">
+            {{ stat('Average per day', "%.1f"|format(laundry.avg_per_day) ~ ' kg', '⚖️', 'amber', 'this month so far') }}
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="section-title">Money</div>
+    <div class="row g-3">
         <div class="col-md-4">
-            <div class="card h-100 border-success">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Collected today</h2>
-                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.today) }}</p>
-                </div>
-            </div>
+            {{ stat('Collected today', '₱' ~ "{:,.2f}".format(revenue.today), '💰', 'green') }}
         </div>
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Total collected</h2>
-                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.collected) }}</p>
-                </div>
-            </div>
+            {{ stat('Total collected', '₱' ~ "{:,.2f}".format(revenue.collected), '🏦', 'teal') }}
         </div>
         <div class="col-md-4">
-            <div class="card h-100 border-danger">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Unpaid balance</h2>
-                    <p class="h3 mb-0">₱{{ "{:,.2f}".format(revenue.unpaid) }}</p>
-                </div>
-            </div>
+            {{ stat('Unpaid balance', '₱' ~ "{:,.2f}".format(revenue.unpaid), '🧾', 'rose', 'see unpaid orders', url_for('order.index', payment='unpaid')) }}
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 text-muted">Total customers</h2>
-                    <p class="display-6 mb-2">{{ total_customers }}</p>
+    <div class="section-title">Customers</div>
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <span>Recently added customers</span>
                     <a href="{{ url_for('customer.index') }}" class="small">View all</a>
                 </div>
+                {% if recent_customers %}
+                {% for c in recent_customers %}
+                <a class="list-row" href="{{ url_for('customer.view', customer_id=c.id) }}">
+                    <span class="avatar avatar-{{ c.id % 5 }}">{{ c.full_name[:1]|upper }}</span>
+                    <span class="flex-grow-1">
+                        <strong class="d-block">{{ c.full_name }}</strong>
+                        <small class="text-muted">{{ c.phone }}</small>
+                    </span>
+                    <small class="text-muted">{{ c.created_at.strftime("%b %d, %Y") }}</small>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state text-muted">
+                    <span class="big">👥</span>
+                    No customers yet. Add your first one to see it here.
+                </div>
+                {% endif %}
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body d-flex flex-column justify-content-center gap-2">
-                    <h2 class="h6 text-muted">Quick actions</h2>
+        <div class="col-lg-4 d-flex flex-column gap-3">
+            {{ stat('Total customers', total_customers, '👥', 'sky', 'view all customers', url_for('customer.index')) }}
+            <div class="panel">
+                <div class="panel-body d-grid gap-2">
+                    <div class="stat-label">Quick actions</div>
                     <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
                     <a href="{{ url_for('customer.add') }}" class="btn btn-outline-primary">+ Add customer</a>
+                    <a href="{{ url_for('volume.index') }}" class="btn btn-outline-primary">Laundry calendar</a>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header bg-white fw-semibold">Recently added customers</div>
-        {% if recent_customers %}
-        <div class="table-responsive">
-            <table class="table mb-0 align-middle">
-                <tbody>
-                    {% for c in recent_customers %}
-                    <tr>
-                        <td class="fw-semibold">
-                            <a href="{{ url_for('customer.view', customer_id=c.id) }}" class="text-decoration-none">{{ c.full_name }}</a>
-                        </td>
-                        <td>{{ c.phone }}</td>
-                        <td class="text-muted">{{ c.created_at.strftime("%b %d, %Y") }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="card-body text-muted">No customers yet. Add your first one to see it here.</div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

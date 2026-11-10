@@ -1,21 +1,16 @@
 {% extends "base.html" %}
+{% from "_ui.html" import hero %}
 
 {% block title %}Orders - NAYA{% endblock %}
 
 {% block content %}
-{% set colors = {'Received': 'secondary', 'Washing': 'warning',
-                 'Ready': 'info', 'Picked up': 'success'} %}
-<div class="container py-4">
-    <div class="page-head">
-        <div>
-            <h1 class="h3 fw-bold mb-1">Orders</h1>
-            <p class="text-muted mb-0">Track every load from received to picked up.</p>
-        </div>
-        <div class="page-actions">
-            <a href="{{ url_for('order.export', **filters) }}" class="btn btn-outline-success">&#11015; Export CSV</a>
-            <a href="{{ url_for('order.add') }}" class="btn btn-primary">+ New order</a>
-        </div>
-    </div>
+{% set status_classes = {'Received': 's-received', 'Washing': 's-washing', 'Ready': 's-ready', 'Picked up': 's-picked'} %}
+<div class="page-wrap">
+
+    {% call hero('Orders', 'Track every load from received to picked up.', '🧺') %}
+        <a href="{{ url_for('order.export', **filters) }}" class="btn btn-outline-light">&#11015; Export CSV</a>
+        <a href="{{ url_for('order.add') }}" class="btn btn-light">+ New order</a>
+    {% endcall %}
 
     {% if focus %}
     <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -37,43 +32,45 @@
         {% endfor %}
     </ul>
 
-    <form method="GET" class="row g-2 align-items-end mb-3">
-        <input type="hidden" name="status" value="{{ filters.status }}">
+    <div class="filter-card">
+        <form method="GET" class="row g-2 align-items-end">
+            <input type="hidden" name="status" value="{{ filters.status }}">
 
-        <div class="col-md-4">
-            <label class="form-label small mb-1" for="q">Customer or order #</label>
-            <input type="search" class="form-control" id="q" name="q"
-                   value="{{ filters.q }}" maxlength="100" placeholder="Search...">
-        </div>
-        <div class="col-6 col-md-2">
-            <label class="form-label small mb-1" for="payment">Payment</label>
-            <select class="form-select" id="payment" name="payment">
-                <option value="">All</option>
-                <option value="paid" {% if filters.payment == 'paid' %}selected{% endif %}>Paid</option>
-                <option value="unpaid" {% if filters.payment == 'unpaid' %}selected{% endif %}>Unpaid</option>
-            </select>
-        </div>
-        <div class="col-6 col-md-2">
-            <label class="form-label small mb-1" for="date_from">From</label>
-            <input type="date" class="form-control" id="date_from" name="date_from"
-                   value="{{ filters.date_from }}">
-        </div>
-        <div class="col-6 col-md-2">
-            <label class="form-label small mb-1" for="date_to">To</label>
-            <input type="date" class="form-control" id="date_to" name="date_to"
-                   value="{{ filters.date_to }}">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-outline-primary">Filter</button>
-            <a href="{{ url_for('order.index') }}" class="btn btn-link">Clear</a>
-        </div>
-    </form>
+            <div class="col-md-4">
+                <label class="form-label small mb-1" for="q">Customer or order #</label>
+                <input type="search" class="form-control" id="q" name="q"
+                       value="{{ filters.q }}" maxlength="100" placeholder="Search...">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="payment">Payment</label>
+                <select class="form-select" id="payment" name="payment">
+                    <option value="">All</option>
+                    <option value="paid" {% if filters.payment == 'paid' %}selected{% endif %}>Paid</option>
+                    <option value="unpaid" {% if filters.payment == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="date_from">From</label>
+                <input type="date" class="form-control" id="date_from" name="date_from"
+                       value="{{ filters.date_from }}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="date_to">To</label>
+                <input type="date" class="form-control" id="date_to" name="date_to"
+                       value="{{ filters.date_to }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('order.index') }}" class="btn btn-link">Clear</a>
+            </div>
+        </form>
+    </div>
 
     {% if orders %}
-    <div class="card">
+    <div class="panel">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table table-modern table-hover">
+                <thead>
                     <tr>
                         <th>#</th>
                         <th>Customer</th>
@@ -89,55 +86,62 @@
                 <tbody>
                     {% for o in orders %}
                     <tr>
-                        <td>{{ o.id }}</td>
-                        <td class="fw-semibold">{{ o.customer_name }}</td>
+                        <td class="text-muted fw-bold">{{ o.id }}</td>
+                        <td>
+                            <div class="who">
+                                <span class="avatar avatar-{{ o.customer_id % 5 }}">{{ o.customer_name[:1]|upper }}</span>
+                                {{ o.customer_name }}
+                            </div>
+                        </td>
                         <td>{{ o.service_type }}</td>
                         <td>{{ o.weight_kg }} kg</td>
-                        <td>₱{{ o.price }}</td>
-                        <td>
-                            <span class="badge text-bg-{{ colors[o.status] }}">{{ o.status }}</span>
-                        </td>
+                        <td class="fw-bold">₱{{ "{:,.2f}".format(o.price) }}</td>
+                        <td><span class="status-pill {{ status_classes[o.status] }}">{{ o.status }}</span></td>
                         <td>
                             {% if o.paid %}
-                            <span class="badge text-bg-success">Paid</span>
+                            <span class="pay-pill paid">Paid</span>
                             {% else %}
-                            <span class="badge text-bg-danger">Unpaid</span>
+                            <span class="pay-pill unpaid">Unpaid</span>
                             {% endif %}
                         </td>
-                        <td>{{ o.created_at.strftime("%b %d, %Y") }}</td>
-                        <td class="text-end text-nowrap">
-                            <a href="{{ url_for('order.detail', order_id=o.id) }}"
-                               class="btn btn-sm btn-outline-secondary">Receipt</a>
-                            {% if not o.paid %}
-                            <a href="{{ url_for('order.edit', order_id=o.id) }}"
-                               class="btn btn-sm btn-outline-primary">Edit</a>
-                            {% endif %}
-                            <form method="POST"
-                                  action="{{ url_for('order.toggle_paid', order_id=o.id) }}"
-                                  class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                    {{ 'Mark unpaid' if o.paid else 'Mark paid' }}
-                                </button>
-                            </form>
-                            <form method="POST"
-                                  action="{{ url_for('order.update_status', order_id=o.id) }}"
-                                  class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <select name="status" class="form-select form-select-sm d-inline w-auto"
-                                        onchange="this.form.submit()">
-                                    {% for s in statuses %}
-                                    <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s }}</option>
-                                    {% endfor %}
-                                </select>
-                            </form>
-                            <form method="POST"
-                                  action="{{ url_for('order.delete', order_id=o.id) }}"
-                                  class="d-inline"
-                                  data-confirm="Delete order #{{ o.id }}? This cannot be undone.">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
+                        <td class="text-muted">{{ o.created_at.strftime("%b %d, %Y") }}</td>
+                        <td>
+                            <div class="row-actions">
+                                <form method="POST"
+                                      action="{{ url_for('order.update_status', order_id=o.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <select name="status" class="form-select form-select-sm"
+                                            aria-label="Change status" onchange="this.form.submit()">
+                                        {% for s in statuses %}
+                                        <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+
+                                <a href="{{ url_for('order.detail', order_id=o.id) }}"
+                                   class="icon-btn" title="Receipt" aria-label="Receipt">🧾</a>
+
+                                {% if not o.paid %}
+                                <a href="{{ url_for('order.edit', order_id=o.id) }}"
+                                   class="icon-btn" title="Edit" aria-label="Edit">✏️</a>
+                                {% endif %}
+
+                                <form method="POST"
+                                      action="{{ url_for('order.toggle_paid', order_id=o.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="icon-btn"
+                                            title="{{ 'Mark unpaid' if o.paid else 'Mark paid' }}"
+                                            aria-label="{{ 'Mark unpaid' if o.paid else 'Mark paid' }}">{{ '↩️' if o.paid else '💲' }}</button>
+                                </form>
+
+                                <form method="POST"
+                                      action="{{ url_for('order.delete', order_id=o.id) }}"
+                                      data-confirm="Delete order #{{ o.id }}? This cannot be undone.">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="icon-btn danger"
+                                            title="Delete" aria-label="Delete">🗑️</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -147,14 +151,17 @@
     </div>
     <p class="text-muted small mt-2">{{ orders|length }} order(s) &middot; Total ₱{{ "{:,.2f}".format(total) }}</p>
     {% else %}
-    <div class="card">
-        <div class="card-body text-center py-5">
+    <div class="panel">
+        <div class="empty-state text-muted">
             {% if focus %}
+            <span class="big">🧺</span>
             <p class="mb-3">{{ focus.full_name }} has no orders yet.</p>
             <a href="{{ url_for('order.add', customer_id=focus.id) }}" class="btn btn-primary">Create an order for them</a>
             {% elif filters.status or filters.payment or filters.q or filters.date_from or filters.date_to %}
+            <span class="big">🔍</span>
             <p class="mb-0">No orders match your filters.</p>
             {% else %}
+            <span class="big">🧺</span>
             <p class="mb-3">You have no orders yet.</p>
             <a href="{{ url_for('order.add') }}" class="btn btn-primary">Create your first order</a>
             {% endif %}

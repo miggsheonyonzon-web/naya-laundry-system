@@ -1,0 +1,27 @@
+{% macro hero(title, subtitle='', icon='') %}
+<section class="page-hero">
+    <div class="page-hero-text">
+        <h1 class="page-hero-title">
+            {% if icon %}<span class="page-hero-icon" aria-hidden="true">{{ icon }}</span>{% endif %}
+            {{ title }}
+        </h1>
+        {% if subtitle %}<p class="page-hero-sub">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if caller %}
+    <div class="page-hero-actions">{{ caller() }}</div>
+    {% endif %}
+</section>
+{% endmacro %}
+
+{% macro stat(label, value, icon, tone='sky', note='', href='') %}
+{% if href %}<a href="{{ href }}" class="stat-link">{% endif %}
+<div class="stat-card tone-{{ tone }}">
+    <div class="stat-icon" aria-hidden="true">{{ icon }}</div>
+    <div>
+        <div class="stat-label">{{ label }}</div>
+        <div class="stat-value">{{ value }}</div>
+        {% if note %}<div class="stat-note">{{ note }}</div>{% endif %}
+    </div>
+</div>
+{% if href %}</a>{% endif %}
+{% endmacro %}
