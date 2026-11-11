@@ -10,7 +10,7 @@ from routes.order import order
 from routes.supply import supply
 from routes.volume import volume
 from routes.notification import build_notification_context, notification
-from routes.payment import payment
+
 
 # Blueprints still to come:
 # from routes.profile import profile
@@ -33,7 +33,7 @@ app.register_blueprint(order)
 app.register_blueprint(supply) 
 app.register_blueprint(volume)
 app.register_blueprint(notification) 
-app.register_blueprint(payment) 
+
 
 @app.route("/")
 def home():
