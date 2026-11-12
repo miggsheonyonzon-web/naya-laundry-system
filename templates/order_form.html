@@ -55,6 +55,20 @@
                                       maxlength="1000">{{ form.get('notes', '') }}</textarea>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label d-block">Pick up or delivery?</label>
+                            <div class="btn-group" role="group" aria-label="Pick up or delivery">
+                                <input type="radio" class="btn-check" name="fulfillment" id="ful_pickup"
+                                       value="Pickup" {% if form.get('fulfillment') != 'Delivery' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary" for="ful_pickup">🛍️ Pick up</label>
+
+                                <input type="radio" class="btn-check" name="fulfillment" id="ful_delivery"
+                                       value="Delivery" {% if form.get('fulfillment') == 'Delivery' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary" for="ful_delivery">🚚 Delivery</label>
+                            </div>
+                            <div class="form-text">Delivery uses the customer's saved address.</div>
+                        </div>
+
                         <p class="text-muted small">The total price is calculated automatically when you save.</p>
 
                         <div class="d-flex gap-2">

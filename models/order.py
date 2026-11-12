@@ -11,12 +11,13 @@ SERVICES = {
 }
 
 STATUSES = ["Received", "Washing", "Ready", "Picked up"]
+FULFILLMENTS = ["Pickup", "Delivery"]
 
 
 class Order:
     def __init__(self, id, user_id, customer_id, service_type, weight_kg,
                  price, status, notes=None, created_at=None, updated_at=None,
-                 customer_name=None, paid=0, paid_at=None, payment_method=None, payment_ref=None):
+                 customer_name=None, paid=0, paid_at=None, fulfillment="Pickup", payment_method=None, payment_ref=None):
         self.id = id
         self.user_id = user_id
         self.customer_id = customer_id
@@ -30,6 +31,7 @@ class Order:
         self.customer_name = customer_name
         self.paid = bool(paid)
         self.paid_at = paid_at
+        self.fulfillment = fulfillment
         self.payment_method = payment_method
         self.payment_ref = payment_ref
 
@@ -337,3 +339,18 @@ class Order:
             cursor.close()
             connection.close()
         return rows
+
+    @staticmethod
+    def set_fulfillment(order_id, user_id, fulfillment):
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(
+                "UPDATE orders SET fulfillment = %s "
+                "WHERE id = %s AND user_id = %s",
+                (fulfillment, order_id, user_id),
+            )
+            connection.commit()
+        finally:
+            cursor.close()
+            connection.close()

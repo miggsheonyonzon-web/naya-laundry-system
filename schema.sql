@@ -89,3 +89,5 @@ CREATE TABLE notifications (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
 );
+
+ALTER TABLE orders ADD COLUMN fulfillment VARCHAR(10) NOT NULL DEFAULT 'Pickup';

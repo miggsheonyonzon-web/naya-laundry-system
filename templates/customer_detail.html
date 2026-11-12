@@ -52,6 +52,7 @@
                     <tr>
                         <th>#</th>
                         <th>Service</th>
+                        <th>Type</th>
                         <th>Weight</th>
                         <th>Total</th>
                         <th>Status</th>
@@ -64,6 +65,13 @@
                     <tr>
                         <td>{{ o.id }}</td>
                         <td>{{ o.service_type }}</td>
+                        <td>
+                            {% if o.fulfillment == 'Delivery' %}
+                            <span class="type-pill delivery">🚚 Delivery</span>
+                            {% else %}
+                            <span class="type-pill pickup">🛍️ Pick up</span>
+                            {% endif %}
+                        </td>
                         <td>{{ o.weight_kg }} kg</td>
                         <td>₱{{ o.price }}</td>
                         <td>{{ o.status }}</td>

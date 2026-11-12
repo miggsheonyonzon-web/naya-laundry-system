@@ -40,6 +40,15 @@
                             <td>{{ order.service_type }}</td>
                         </tr>
                         <tr>
+                            <th>Type</th>
+                            <td>
+                                {{ '🚚 Delivery' if order.fulfillment == 'Delivery' else '🛍️ Pick up' }}
+                                {% if order.fulfillment == 'Delivery' and customer and customer.address %}
+                                <br><small class="text-muted">{{ customer.address }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
                             <th>Weight</th>
                             <td>{{ order.weight_kg }} kg</td>
                         </tr>

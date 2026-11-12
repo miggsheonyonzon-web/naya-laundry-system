@@ -940,3 +940,18 @@ a.list-row:hover {
     margin-bottom: 0.5rem;
     font-size: 3rem;
 }
+
+/* ---------- Pick up / delivery pills ---------- */
+.type-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.type-pill.pickup { background: #e0f2fe; color: #0369a1; }
+.type-pill.delivery { background: #fef3c7; color: #b45309; }

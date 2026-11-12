@@ -6,7 +6,7 @@ from flask import (Blueprint, Response, abort, flash, redirect,
                    render_template, request, session, url_for)
 
 from models.customer import Customer
-from models.order import SERVICES, STATUSES, Order
+from models.order import FULFILLMENTS, SERVICES, STATUSES, Order
 from routes.auth import login_required
 from routes.notification import notify_new_order, notify_paid, notify_status
 
@@ -20,6 +20,7 @@ def read_and_validate(user_id):
         "service_type": request.form.get("service_type", ""),
         "weight_kg": request.form.get("weight_kg", "").strip(),
         "notes": request.form.get("notes", "").strip(),
+        "fulfillment": request.form.get("fulfillment", "Pickup"),
     }
     errors = []
 
@@ -32,6 +33,13 @@ def read_and_validate(user_id):
 
     if values["service_type"] not in SERVICES:
         errors.append("Please choose a valid service.")
+
+    if values["fulfillment"] not in FULFILLMENTS:
+        errors.append("Please choose Pick up or Delivery.")
+    elif (values["fulfillment"] == "Delivery" and customer is not None
+          and not customer.address):
+        errors.append("This customer has no saved address. Add one first, "
+                      "then choose Delivery.")
 
     weight = None
     try:
@@ -89,7 +97,9 @@ def add():
         Order.create(user_id, int(values["customer_id"]),
                      values["service_type"], weight, price, values["notes"])
 
-        notify_new_order(user_id, Order.latest_id(user_id))
+        new_id = Order.latest_id(user_id)
+        Order.set_fulfillment(new_id, user_id, values["fulfillment"])
+        notify_new_order(user_id, new_id)
         flash(f"Order created. Total: ₱{price}", "success")
         return redirect(url_for("order.index"))
 
@@ -183,6 +193,7 @@ def edit(order_id):
         Order.update(order_id, user_id, int(values["customer_id"]),
                      values["service_type"], weight, price, values["notes"])
 
+        Order.set_fulfillment(order_id, user_id, values["fulfillment"])
         flash(f"Order #{order_id} updated. New total: ₱{price}", "success")
         return redirect(url_for("order.index"))
 
@@ -191,6 +202,7 @@ def edit(order_id):
         "service_type": record.service_type,
         "weight_kg": str(record.weight_kg),
         "notes": record.notes or "",
+        "fulfillment": record.fulfillment,
     }
     return render_template("order_form.html", form=form, customers=customers,
                            services=SERVICES, title=title,
