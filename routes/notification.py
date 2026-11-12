@@ -13,6 +13,13 @@ DROPDOWN_LIMIT = 8
 
 # ---------- Activity: saved when something happens ----------
 
+def amount_text(record):
+    """'2 piece(s) of Comforters' or '3.5 kg of General clothing'."""
+    if record.pieces:
+        return f"{record.pieces} piece(s) of {record.service_type}"
+    return f"{record.weight_kg} kg of {record.service_type}"
+
+
 def notify_new_order(user_id, order_id):
     record = Order.find_by_id(order_id, user_id)
     if record is None:
@@ -20,7 +27,7 @@ def notify_new_order(user_id, order_id):
     Notification.create(
         user_id, "order_new",
         f"New order #{record.id} for {record.customer_name}: "
-        f"{record.weight_kg} kg {record.service_type}, ₱{record.price}",
+        f"{amount_text(record)}, ₱{record.price}",
         record.customer_id, record.id)
 
 

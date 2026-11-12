@@ -6,7 +6,8 @@ from flask import (Blueprint, Response, abort, flash, redirect,
                    render_template, request, session, url_for)
 
 from models.customer import Customer
-from models.order import FULFILLMENTS, SERVICES, STATUSES, Order
+from models.order import FULFILLMENTS, STATUSES, Order
+from pricing import COMFORTER, GENERAL, OPTIONS, calculate_price
 from routes.auth import login_required
 from routes.notification import notify_new_order, notify_paid, notify_status
 
@@ -19,6 +20,7 @@ def read_and_validate(user_id):
         "customer_id": request.form.get("customer_id", ""),
         "service_type": request.form.get("service_type", ""),
         "weight_kg": request.form.get("weight_kg", "").strip(),
+        "pieces": request.form.get("pieces", "").strip(),
         "notes": request.form.get("notes", "").strip(),
         "fulfillment": request.form.get("fulfillment", "Pickup"),
     }
@@ -31,8 +33,27 @@ def read_and_validate(user_id):
     if customer is None:
         errors.append("Please choose one of your customers.")
 
-    if values["service_type"] not in SERVICES:
-        errors.append("Please choose a valid service.")
+    option = values["service_type"]
+    weight = Decimal("0.00")
+
+    if option == GENERAL:
+        values["pieces"] = ""
+        try:
+            weight = Decimal(values["weight_kg"])
+            if not weight.is_finite() or not (Decimal("0.1") <= weight
+                                              <= Decimal("100")):
+                raise InvalidOperation
+            weight = weight.quantize(Decimal("0.01"))
+        except InvalidOperation:
+            weight = Decimal("0.00")
+            errors.append("Weight must be a number between 0.1 and 100 kg.")
+    elif option == COMFORTER:
+        values["weight_kg"] = ""
+        if not (values["pieces"].isdecimal()
+                and 1 <= int(values["pieces"]) <= 50):
+            errors.append("Comforters must be a whole number from 1 to 50.")
+    else:
+        errors.append("Please choose General clothing or Comforters.")
 
     if values["fulfillment"] not in FULFILLMENTS:
         errors.append("Please choose Pick up or Delivery.")
@@ -40,17 +61,6 @@ def read_and_validate(user_id):
           and not customer.address):
         errors.append("This customer has no saved address. Add one first, "
                       "then choose Delivery.")
-
-    weight = None
-    try:
-        weight = Decimal(values["weight_kg"])
-        if not weight.is_finite() or not (Decimal("0.1") <= weight
-                                          <= Decimal("100")):
-            raise InvalidOperation
-        weight = weight.quantize(Decimal("0.01"))
-    except InvalidOperation:
-        weight = None
-        errors.append("Weight must be a number between 0.1 and 100 kg.")
 
     if len(values["notes"]) > 1000:
         errors.append("Notes must be 1000 characters or fewer.")
@@ -91,11 +101,12 @@ def add():
             for error in errors:
                 flash(error, "danger")
             return render_template("order_form.html", form=values,
-                                   customers=customers, services=SERVICES)
+                                   customers=customers, options=OPTIONS)
 
-        price = Order.calculate_price(values["service_type"], weight)
+        price = calculate_price(values["service_type"], weight, values["pieces"])
         Order.create(user_id, int(values["customer_id"]),
-                     values["service_type"], weight, price, values["notes"])
+                     values["service_type"], weight, price, values["notes"],
+                     values["pieces"])
 
         new_id = Order.latest_id(user_id)
         Order.set_fulfillment(new_id, user_id, values["fulfillment"])
@@ -104,7 +115,7 @@ def add():
         return redirect(url_for("order.index"))
 
     return render_template("order_form.html", form={}, customers=customers,
-                           services=SERVICES) 
+                           options=OPTIONS) 
 
 
 @order.route("/<int:order_id>/status", methods=["POST"])
@@ -186,12 +197,13 @@ def edit(order_id):
             for error in errors:
                 flash(error, "danger")
             return render_template("order_form.html", form=values,
-                                   customers=customers, services=SERVICES,
+                                   customers=customers, options=OPTIONS,
                                    title=title, button="Save changes")
 
-        price = Order.calculate_price(values["service_type"], weight)
+        price = calculate_price(values["service_type"], weight, values["pieces"])
         Order.update(order_id, user_id, int(values["customer_id"]),
-                     values["service_type"], weight, price, values["notes"])
+                     values["service_type"], weight, price, values["notes"],
+                     values["pieces"])
 
         Order.set_fulfillment(order_id, user_id, values["fulfillment"])
         flash(f"Order #{order_id} updated. New total: ₱{price}", "success")
@@ -201,11 +213,12 @@ def edit(order_id):
         "customer_id": str(record.customer_id),
         "service_type": record.service_type,
         "weight_kg": str(record.weight_kg),
+        "pieces": str(record.pieces or ""),
         "notes": record.notes or "",
         "fulfillment": record.fulfillment,
     }
     return render_template("order_form.html", form=form, customers=customers,
-                           services=SERVICES, title=title,
+                           options=OPTIONS, title=title,
                            button="Save changes")
 
 

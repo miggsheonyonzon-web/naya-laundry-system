@@ -2,13 +2,7 @@ from decimal import Decimal
 
 from database import get_db_connection
 
-# Sample rates in pesos per kg. Confirm the real rates with your client.
-SERVICES = {
-    "Wash & Fold": 50,
-    "Wash, Dry & Fold": 70,
-    "Dry Clean": 150,
-    "Bedding & Comforters": 200,
-}
+# Prices are set in pricing.py
 
 STATUSES = ["Received", "Washing", "Ready", "Picked up"]
 FULFILLMENTS = ["Pickup", "Delivery"]
@@ -17,7 +11,7 @@ FULFILLMENTS = ["Pickup", "Delivery"]
 class Order:
     def __init__(self, id, user_id, customer_id, service_type, weight_kg,
                  price, status, notes=None, created_at=None, updated_at=None,
-                 customer_name=None, paid=0, paid_at=None, fulfillment="Pickup", payment_method=None, payment_ref=None):
+                 customer_name=None, paid=0, paid_at=None, fulfillment="Pickup", pieces=None, payment_method=None, payment_ref=None):
         self.id = id
         self.user_id = user_id
         self.customer_id = customer_id
@@ -32,13 +26,10 @@ class Order:
         self.paid = bool(paid)
         self.paid_at = paid_at
         self.fulfillment = fulfillment
+        self.pieces = pieces
         self.payment_method = payment_method
         self.payment_ref = payment_ref
 
-    @staticmethod
-    def calculate_price(service_type, weight):
-        rate = SERVICES[service_type]
-        return (Decimal(str(weight)) * rate).quantize(Decimal("0.01"))
 
     @staticmethod
     def _fetch_all(query, params):
@@ -90,15 +81,16 @@ class Order:
         return {status: counts.get(status, 0) for status in STATUSES}
 
     @staticmethod
-    def create(user_id, customer_id, service_type, weight_kg, price, notes):
+    def create(user_id, customer_id, service_type, weight_kg, price, notes,
+               pieces=None):
         connection = get_db_connection()
         cursor = connection.cursor()
         try:
             cursor.execute(
                 "INSERT INTO orders (user_id, customer_id, service_type, "
-                "weight_kg, price, notes) VALUES (%s, %s, %s, %s, %s, %s)",
+                "weight_kg, price, notes, pieces) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 (user_id, customer_id, service_type, weight_kg, price,
-                 notes or None),
+                 notes or None, int(pieces) if pieces else None),
             )
             connection.commit()
         finally:
@@ -179,15 +171,16 @@ class Order:
 
     @staticmethod
     def update(order_id, user_id, customer_id, service_type, weight_kg,
-               price, notes):
+               price, notes, pieces=None):
         connection = get_db_connection()
         cursor = connection.cursor()
         try:
             cursor.execute(
                 "UPDATE orders SET customer_id = %s, service_type = %s, "
-                "weight_kg = %s, price = %s, notes = %s "
+                "weight_kg = %s, price = %s, notes = %s, pieces = %s "
                 "WHERE id = %s AND user_id = %s",
                 (customer_id, service_type, weight_kg, price, notes or None,
+                 int(pieces) if pieces else None,
                  order_id, user_id),
             )
             connection.commit()

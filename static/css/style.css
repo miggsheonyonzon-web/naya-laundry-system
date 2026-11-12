@@ -955,3 +955,12 @@ a.list-row:hover {
 
 .type-pill.pickup { background: #e0f2fe; color: #0369a1; }
 .type-pill.delivery { background: #fef3c7; color: #b45309; }
+
+/* ---------- Live price box ---------- */
+.price-box {
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-radius: 1rem;
+    border: 1px dashed rgba(14, 165, 233, 0.55);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(20, 184, 166, 0.18));
+}

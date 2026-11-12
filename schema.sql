@@ -91,3 +91,5 @@ CREATE TABLE notifications (
 );
 
 ALTER TABLE orders ADD COLUMN fulfillment VARCHAR(10) NOT NULL DEFAULT 'Pickup';
+
+ALTER TABLE orders ADD COLUMN pieces INT NULL;

@@ -3,6 +3,8 @@
 {% block title %}{{ title|default('New order') }} - NAYA{% endblock %}
 
 {% block content %}
+{% set chosen = form.get('service_type', pricing.GENERAL) %}
+{% set kg_value = form.get('weight_kg', '') %}
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
@@ -28,25 +30,37 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label" for="service_type">Service</label>
-                            <select class="form-select" id="service_type" name="service_type" required>
-                                <option value="">Choose a service...</option>
-                                {% for name, rate in services.items() %}
-                                <option value="{{ name }}"
-                                    {% if form.get('service_type') == name %}selected{% endif %}>
-                                    {{ name }} (₱{{ rate }}/kg)
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <div class="invalid-feedback">Choose a service.</div>
+                            <label class="form-label d-block">Option</label>
+                            <div class="btn-group" role="group" aria-label="Laundry option">
+                                <input type="radio" class="btn-check" name="service_type" id="opt_general"
+                                       value="{{ pricing.GENERAL }}" {% if chosen == pricing.GENERAL %}checked{% endif %} required>
+                                <label class="btn btn-outline-primary" for="opt_general">👕 General clothing</label>
+
+                                <input type="radio" class="btn-check" name="service_type" id="opt_comforter"
+                                       value="{{ pricing.COMFORTER }}" {% if chosen == pricing.COMFORTER %}checked{% endif %} required>
+                                <label class="btn btn-outline-primary" for="opt_comforter">🛏️ Comforters</label>
+                            </div>
+                            <div class="form-text">
+                                General clothing is ₱{{ pricing.PER_KG }} per kg (flat ₱{{ pricing.SMALL_LOAD_PRICE }} under {{ pricing.SMALL_LOAD_KG }} kg).
+                                Comforters are ₱{{ pricing.PER_COMFORTER }} per piece.
+                                Wash, dry, fold, detergent and fabric conditioner are free.
+                            </div>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3" id="kgGroup">
                             <label class="form-label" for="weight_kg">Weight (kg)</label>
                             <input type="number" class="form-control" id="weight_kg" name="weight_kg"
-                                   value="{{ form.get('weight_kg', '') }}"
-                                   min="0.1" max="100" step="0.1" required>
+                                   value="{{ '' if kg_value in ('0', '0.0', '0.00') else kg_value }}"
+                                   min="0.1" max="100" step="0.01" inputmode="decimal">
                             <div class="invalid-feedback">Enter a weight between 0.1 and 100 kg.</div>
+                        </div>
+
+                        <div class="mb-3" id="pcsGroup">
+                            <label class="form-label" for="pieces">Number of comforters</label>
+                            <input type="number" class="form-control" id="pieces" name="pieces"
+                                   value="{{ form.get('pieces', '') }}"
+                                   min="1" max="50" step="1" inputmode="numeric">
+                            <div class="invalid-feedback">Enter a whole number from 1 to 50.</div>
                         </div>
 
                         <div class="mb-3">
@@ -69,7 +83,18 @@
                             <div class="form-text">Delivery uses the customer's saved address.</div>
                         </div>
 
-                        <p class="text-muted small">The total price is calculated automatically when you save.</p>
+                        <div class="price-box" id="priceBox"
+                             data-per-kg="{{ pricing.PER_KG }}"
+                             data-small-kg="{{ pricing.SMALL_LOAD_KG }}"
+                             data-small-price="{{ pricing.SMALL_LOAD_PRICE }}"
+                             data-per-piece="{{ pricing.PER_COMFORTER }}"
+                             data-general="{{ pricing.GENERAL }}"
+                             data-comforter="{{ pricing.COMFORTER }}">
+                            <div class="small text-muted">Estimated total</div>
+                            <div class="fs-3 fw-bold" id="priceTotal">₱0.00</div>
+                            <div class="small text-muted" id="priceNote">Choose an option to see the price.</div>
+                        </div>
+                        <p class="text-muted small">The final total is calculated again when you save.</p>
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">{{ button|default('Create order') }}</button>
@@ -81,4 +106,78 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var box = document.getElementById("priceBox");
+    if (!box) { return; }
+
+    var perKg = Number(box.dataset.perKg);
+    var smallKg = Number(box.dataset.smallKg);
+    var smallPrice = Number(box.dataset.smallPrice);
+    var perPiece = Number(box.dataset.perPiece);
+
+    var weight = document.getElementById("weight_kg");
+    var pieces = document.getElementById("pieces");
+    var kgGroup = document.getElementById("kgGroup");
+    var pcsGroup = document.getElementById("pcsGroup");
+    var total = document.getElementById("priceTotal");
+    var note = document.getElementById("priceNote");
+
+    function peso(value) {
+        return "₱" + value.toLocaleString("en-PH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function update() {
+        var picked = document.querySelector('input[name="service_type"]:checked');
+        var option = picked ? picked.value : "";
+        var isGeneral = option === box.dataset.general;
+        var isComforter = option === box.dataset.comforter;
+
+        kgGroup.classList.toggle("d-none", !isGeneral);
+        pcsGroup.classList.toggle("d-none", !isComforter);
+        weight.required = isGeneral;
+        pieces.required = isComforter;
+
+        var amount = 0;
+        var text = "Choose an option to see the price.";
+
+        if (isGeneral) {
+            var kg = parseFloat(weight.value);
+            if (kg > 0) {
+                if (kg < smallKg) {
+                    amount = smallPrice;
+                    text = "Under " + smallKg + " kg: flat " + peso(smallPrice);
+                } else {
+                    amount = kg * perKg;
+                    text = kg + " kg x " + peso(perKg) + " per kg";
+                }
+            } else {
+                text = "Type the kg to see the price.";
+            }
+        } else if (isComforter) {
+            var count = parseInt(pieces.value, 10);
+            if (count > 0) {
+                amount = count * perPiece;
+                text = count + " x " + peso(perPiece) + " per comforter";
+            } else {
+                text = "Type the number of comforters to see the price.";
+            }
+        }
+
+        total.textContent = peso(amount);
+        note.textContent = text;
+    }
+
+    document.querySelectorAll('input[name="service_type"]').forEach(function (radio) {
+        radio.addEventListener("change", update);
+    });
+    weight.addEventListener("input", update);
+    pieces.addEventListener("input", update);
+    update();
+})();
+</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, session
 
+import pricing
 from extensions import csrf, mail
 from routes.auth import auth
 from routes.dashboard import dashboard
@@ -61,6 +62,11 @@ def csrf_error(error):
 @app.errorhandler(413)
 def too_large(error):
     return show_error(413, "That file is too large. Please upload an image under 2 MB.")
+
+@app.context_processor
+def inject_pricing():
+    return {"pricing": pricing}
+
 
 @app.context_processor
 def inject_notifications():
