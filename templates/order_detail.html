@@ -48,14 +48,17 @@
                                 {% endif %}
                             </td>
                         </tr>
+                        {% if order.pieces %}
+                        <tr>
+                            <th>Pieces</th>
+                            <td>{{ order.pieces }} comforter{{ '' if order.pieces == 1 else 's' }}</td>
+                        </tr>
+                        {% else %}
                         <tr>
                             <th>Weight</th>
                             <td>{{ order.weight_kg }} kg</td>
                         </tr>
-                        <tr>
-                            <th>Rate</th>
-                            <td>₱{{ "%.2f"|format(order.price / order.weight_kg) }} / kg</td>
-                        </tr>
+                        {% endif %}
                         <tr>
                             <th>Status</th>
                             <td>{{ order.status }}</td>
